@@ -16,8 +16,8 @@
 
 #include <stdio.h>
 
-#define minutosLiteral "minutos"
-#define segundosLiteral "segundos"
+#define MINUTOS_LITERAL "minutos"
+#define SEGUNDOS_LITERAL "segundos"
 
 /**
  * Funcion principal.
@@ -36,7 +36,7 @@ int main() {
     minutos = segundos / 60;
     segundos = segundos % 60;
 
-    printf("%ld %s ... %ld %s.", minutos, minutosLiteral, segundos, segundosLiteral);
+    printf("%ld %s ... %ld %s.", minutos, MINUTOS_LITERAL, segundos, SEGUNDOS_LITERAL);
 
     //Acabamos el programa sin errres
     return 0;
