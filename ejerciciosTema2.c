@@ -1,9 +1,9 @@
 /*
- * @File:   Ejercicio2.c - Ejercicio j
+ * @File:   EjerciciosTema2.c - Ejercicio i+j
  *
- * Sinopsis: Segundo ejercicio propuesto del tema 2.
+ * Sinopsis: ejercicios propuestos del tema 2.
  *
- * El progrma realiza una petición al usuario para que introduzca una cantidad de
+ * El programa realiza una petición al usuario para que introduzca una cantidad de
  * segundos, posteirormente se le muestra esa cantidad y su equivalente en
  * horas, minutos y lo que sobra en segundos.
  *
@@ -11,11 +11,12 @@
  *
  * fecha: 15/02/2017 19:36
  *
- * @version 0.1
+ * @version 0.3 - Entrega 3
  */
 
 #include <stdio.h>
 
+//Textos que el precompilador cambiará en código por el valor antes de compilar
 #define HORAS_LITERAL "horas"
 #define MINUTOS_LITERAL "minutos"
 #define SEGUNDOS_LITERAL "segundos"
@@ -26,6 +27,10 @@
  */
 int main() {
 
+    //Constantes numéricas
+    const int SEGUNDOS_MINUTO = 60;
+    const int SEGUNDOS_HORA = SEGUNDOS_MINUTO * 60;
+
     //Declaramos un long para que no nos quedemos cortos.
     long segundos, minutos, horas;
 
@@ -34,9 +39,9 @@ int main() {
     scanf("%ld", &segundos);
 
     //Operaciones
-    horas = segundos / 3600;
-    minutos = (segundos % 3600) / 60;
-    segundos = (segundos % 3600) % 60;
+    horas = segundos / SEGUNDOS_HORA;
+    minutos = (segundos % SEGUNDOS_HORA) / SEGUNDOS_MINUTO;
+    segundos = (segundos % SEGUNDOS_HORA) % SEGUNDOS_MINUTO;
 
     printf("%ld %s ... %ld %s ... %ld %s.", horas, HORAS_LITERAL, minutos, MINUTOS_LITERAL, segundos, SEGUNDOS_LITERAL);
 
