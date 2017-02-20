@@ -34,11 +34,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8218e769-3e9a-4dc6-a602-949b19c14d7f" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/ejercicio1.c" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/ejercicio2.c" afterPath="$PROJECT_DIR$/ejerciciosTema2.c" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/University-Programming-subject..iml" afterPath="$PROJECT_DIR$/.idea/University-Programming-subject..iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CMakeLists.txt" afterPath="$PROJECT_DIR$/CMakeLists.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ejerciciosTema2.c" afterPath="$PROJECT_DIR$/ejerciciosTema2.c" />
     </list>
     <ignored path="University-Programming-subject..iws" />
     <ignored path=".idea/workspace.xml" />
@@ -71,11 +69,11 @@
       <file leaf-file-name="ejerciciosTema2.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ejerciciosTema2.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="224">
-              <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+            <state relative-caret-position="196">
+              <caret line="21" column="31" selection-start-line="21" selection-start-column="31" selection-end-line="21" selection-end-column="31" />
               <folding>
                 <element signature="e#0#404#0" expanded="false" />
-                <element signature="e#607#668#0" expanded="false" />
+                <element signature="e#515#576#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -104,9 +102,9 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="1431" />
-    <option name="y" value="-1" />
+    <option name="y" value="24" />
     <option name="width" value="2495" />
-    <option name="height" value="1081" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -373,15 +371,17 @@
       <workItem from="1487185962636" duration="152000" />
       <workItem from="1487187194287" duration="672000" />
       <workItem from="1487352948219" duration="1868000" />
+      <workItem from="1487611571980" duration="494000" />
+      <workItem from="1487612112978" duration="40000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6178000" />
+    <option name="totallyTimeSpent" value="6712000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1431" y="-1" width="2495" height="1081" extended-state="6" />
-    <editor active="true" />
+    <frame x="1431" y="24" width="2495" height="1056" extended-state="6" />
+    <editor active="false" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299285" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -423,6 +423,44 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="28">
+          <caret line="1" column="30" selection-start-line="1" selection-start-column="30" selection-end-line="1" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ejerciciosTema2.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#404#0" expanded="false" />
+            <element signature="e#515#576#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="28">
+          <caret line="1" column="30" selection-start-line="1" selection-start-column="30" selection-end-line="1" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ejerciciosTema2.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#404#0" expanded="false" />
+            <element signature="e#515#576#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
@@ -437,21 +475,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ejercicio1.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/ejercicio1.c" />
     <entry file="file://$PROJECT_DIR$/ejerciciosTema2.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="532">
           <caret line="19" column="33" selection-start-line="19" selection-start-column="33" selection-end-line="19" selection-end-column="33" />
           <folding>
             <element signature="e#0#404#0" expanded="false" />
-            <element signature="e#607#668#0" expanded="false" />
+            <element signature="e#515#576#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -474,21 +505,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ejercicio1.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="20" column="0" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/ejercicio1.c" />
     <entry file="file://$PROJECT_DIR$/ejerciciosTema2.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+        <state relative-caret-position="196">
+          <caret line="21" column="31" selection-start-line="21" selection-start-column="31" selection-end-line="21" selection-end-column="31" />
           <folding>
             <element signature="e#0#404#0" expanded="false" />
-            <element signature="e#607#668#0" expanded="false" />
+            <element signature="e#515#576#0" expanded="false" />
           </folding>
         </state>
       </provider>
