@@ -1,5 +1,5 @@
 /*
- * @File:   EjerciciosTema2.c - Ejercicio i+j
+ * @File:   EjerciciosTema2.c - Ejercicio i+j+k
  *
  * Sinopsis: ejercicios propuestos del tema 2.
  *
@@ -9,17 +9,17 @@
  *
  * @author: Santiago Hoyos Zea
  *
- * fecha: 20/02/2017
+ * fecha: 22/02/2017
  *
- * @version 0.4 - Entrega 4
+ * @version 0.6 - Entrega 6
  */
 
 #include <stdio.h>
 
-
-//Constantes numéricas
+//Constante numérica
 const int SEGUNDOS_MINUTO = 60;
-const int SEGUNDOS_HORA = 3600;
+const int MINUTOS_HORA = 60;
+const int HORAS_DIA = 24;
 
 /**
  * Funcion principal.
@@ -28,18 +28,24 @@ const int SEGUNDOS_HORA = 3600;
 int main() {
 
     //Declaramos un long para que no nos quedemos cortos.
-    long segundosRecogidos, segundosSalida, minutos, horas;
+    long segundosRecogidos, segundosSalida, minutos, minutosMenosHoras, horas, horasMenosDias, dias;
 
     //Recogida de datos
     printf("Escribe una cantidad de segundos: ");
     scanf("%ld", &segundosRecogidos);
 
-    //Operaciones
-    horas = segundosRecogidos / SEGUNDOS_HORA;
-    minutos = (segundosRecogidos % SEGUNDOS_HORA) / SEGUNDOS_MINUTO;
-    segundosSalida = (segundosRecogidos % SEGUNDOS_HORA) % SEGUNDOS_MINUTO;
+    segundosSalida = segundosRecogidos % SEGUNDOS_MINUTO;
+    minutos = segundosRecogidos / SEGUNDOS_MINUTO;
+    horas = minutos / MINUTOS_HORA;
+    dias = horas / HORAS_DIA;
 
-    printf("%ld segundos son: %ld horas %ld minutos y %ld segundos.", segundosRecogidos, horas, minutos, segundosSalida);
+    minutosMenosHoras = minutos - (horas * MINUTOS_HORA);
+    horasMenosDias = horas - (dias * HORAS_DIA);
+
+    printf("%ld segundos son: %ld dias %ld horas %ld minutos %ld segundos, o bien,"
+                   " %ld horas %ld minutos %ld segundos, o también, %ld minutos y %ld segundos",
+           segundosRecogidos, dias, horasMenosDias, minutosMenosHoras, segundosSalida, horas, minutosMenosHoras,
+           segundosSalida, minutos, segundosSalida);
 
     //Acabamos el programa sin errres
     return 0;
