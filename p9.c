@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define NOMBRE_FICHERO_MATRIZ "numeros.txt"
 #define NOMBRE_FICHERO_SALIDA_SUMA "suma.txt"
@@ -56,11 +57,13 @@ int main() {
     FILE *ficheroSuma = abreFichero(NOMBRE_FICHERO_SALIDA_SUMA, "w");
     FILE *ficheroProduc = abreFichero(NOMBRE_FICHERO_SALIDA_PRODUCTO, "w");
 
-    if (ficheroMatriz != NULL) {
+    _Bool todoCerrado = true;
+
+    if (ficheroMatriz != NULL && ficheroProduc != NULL && ficheroSuma != NULL) {
 
         leeMatrizDesdeFichero(ficheroMatriz, filas, columnas, matrizA);
 
-        cierraFichero(ficheroMatriz);
+        todoCerrado = todoCerrado && cierraFichero(ficheroMatriz);
 
         pideMatriz(filas, columnas, matrizB);
 
@@ -75,19 +78,19 @@ int main() {
         printf("\nMatriz A+B: \n");
         escribeMatrizASalida(stdout, filas, columnas, matrizSumada);
         escribeMatrizASalida(ficheroSuma, filas, columnas, matrizSumada);
-        cierraFichero(ficheroSuma);
+        todoCerrado = todoCerrado && cierraFichero(ficheroSuma);
 
         //Producto de las matrices
         multiplicaMatrices(filas, columnas, matrizA, matrizB, matrizProducto);
         printf("\nMatriz AxB: \n");
         escribeMatrizASalida(stdout, filas, columnas, matrizProducto);
         escribeMatrizASalida(ficheroProduc, filas, columnas, matrizProducto);
-        cierraFichero(ficheroProduc);
+        todoCerrado = todoCerrado && cierraFichero(ficheroProduc);
 
-        return EXIT_SUCCESS;
+        return todoCerrado ? EXIT_SUCCESS : EXIT_FAILURE;
 
     } else {
-        printf("Problema al leer fichero" NOMBRE_FICHERO_MATRIZ);
+        printf("Problema al abrir ficheros...");
         return EXIT_FAILURE;
     }
 
