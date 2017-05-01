@@ -43,15 +43,8 @@ int main() {
 
     FILE *ficheroDatos;
     int posUltimaAccion = -1; //<-- -1 significa que la ultima posicion se realizó en el final.
-
     _Bool todoOk = true;
-
-    //int seleccion = muestraMenu();
-
-
-
-    char op;
-    op = muestraMenu();
+    char op = muestraMenu();
 
     while (op != '0') {
         switch (op) {
@@ -101,70 +94,12 @@ int main() {
                 sobrescribePosicion(posUltimaAccion, pideDato("\nEscribe un número: "), RUTA_FICHERO);
                 break;
 
-            case ' ':
-            case '\n':
-                break;
             default:
                 printf("¡Opción invalida!\\n");
         }
 
         op = muestraMenu();
     }
-
-/*    while (seleccion != 0) {
-
-        switch (seleccion) {
-
-            case 1:
-                ficheroDatos = abreFichero(RUTA_FICHERO, "a+");
-
-                if (ficheroDatos != NULL) {
-                    imprimeDatosFichero(ficheroDatos);
-                    posUltimaAccion = -1;
-                    todoOk = todoOk && cierraFichero(ficheroDatos);
-                } else {
-                    todoOk = false;
-                }
-
-                break;
-
-            case 2:
-                ficheroDatos = abreFichero(RUTA_FICHERO, "a+");
-
-                if (ficheroDatos != NULL) {
-                    escribeAlFinal(pideDato("\nEscribe un número: "), ficheroDatos);
-                    posUltimaAccion = -1;
-                    todoOk = todoOk && cierraFichero(ficheroDatos);
-                } else {
-                    todoOk = false;
-                }
-
-                break;
-
-            case 3:
-                ficheroDatos = abreFichero(RUTA_FICHERO, "r+");
-                int pos = pideDato("\nPosción deseada?: ");
-
-                //Si no se lee nada en esa posición la ignoramos y seguimos con la última válida
-                if (muestraDatoEnPosicion(pos, ficheroDatos)) {
-                    posUltimaAccion = pos;
-                }
-
-                cierraFichero(ficheroDatos);
-                break;
-
-            case 4:
-                sobrescribePosicion(posUltimaAccion, pideDato("\nEscribe un número: "), RUTA_FICHERO);
-                break;
-
-            default:
-                printf("¡Opción invalida!\n");
-                break;
-        }
-
-        seleccion = muestraMenu();
-    }*/
-
 
     return todoOk ? EXIT_SUCCESS : EXIT_FAILURE;
 }
