@@ -130,10 +130,11 @@ void muestraFichero24(FILE *ficheroAbierto) {
     char siguiente = NULL;
     char tmp[n] = "";
     int leidos = 0;
+	int i;
 
     do {
 
-        for (int i = 0; i < 24 && tmp != NULL; ++i) {
+        for (i = 0; i < 24 && tmp != NULL; ++i) {
 
             if (fgets(tmp, n, ficheroAbierto) != NULL) {
                 printf(tmp);
