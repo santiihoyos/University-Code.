@@ -36,10 +36,10 @@ output="informe$(date +%d%m%y-%H%M).txt"
 #output="informe.txt"
 
 ##Funciones
-#Funcion PrintMem; imprime la memoria
-function PrintMem {
+#Funcion imprimeMemoria; imprime la memoria
+function imprimeMemoria {
 
-	echo "Entra a PrintMem"
+	echo "Entra a imprimeMemoria"
 
 	for (( jk=0; jk<$mem_total; jk++ )) do
 
@@ -135,10 +135,10 @@ function Orden {
 }
 
 
-#Función CompNomb - comprueba que el nombre no tiene espacios ni se ha utilizado antes
-function CompNomb {
+#Función validaNombre - comprueba que el nombre no tiene espacios ni se ha utilizado antes
+function validaNombre {
 
-	echo "Entra a CompNomb"
+	echo "Entra a validaNombre"
 
 	local j
 	local x=0
@@ -153,9 +153,11 @@ function CompNomb {
 
 		#La comprobación solo se hace si no es el primer nombre
 		for ((z=0 ; z<$(expr $i-1) ; z++ )) do
+
 			if [ "${proc_name[$(expr $i-1)]}" == "${proc_name[$z]}" ];then
 				error=1
 			fi
+
 		done
 
 	fi
@@ -163,9 +165,9 @@ function CompNomb {
 
 
 #Función Informacion que muestra al usuario la informacion de los datos introducidos
-function Informacion {
+function imprimeInformacion {
 
-	echo "Entra a Informacion"
+	echo "Entra a imprimeInformacion"
 
 	Orden
 	echo -e "${minuscyan} --------------------------------------------------------------- ${NC}"
@@ -181,10 +183,10 @@ function Informacion {
 }
 
 
-#Función InformacionPrint guarda en un fichero la informacion
-function InformacionPrint {
+#Función imprimeInformacionAFichero guarda en un fichero la informacion
+function imprimeInformacionAFichero {
 
-	echo "Entra a InformacionPrint"
+	echo "Entra a imprimeInformacionAFichero"
 
 	echo "Los datos de los procesos son los siguientes" >> $output
 	echo " --------------------------------------------------------------- "  >> $output
@@ -200,15 +202,16 @@ function InformacionPrint {
 }
 
 
-#Función Fichero, lee datos de un fichero
-function Fichero {
+#Función leeDatosDesdeFichero, lee datos de un fichero
+function leeDatosDesdeFichero {
 
-	echo "Entra a Fichero"
+	echo "Entra a leeDatosDesdeFichero"
 
 	x=0
 	r=0
 
-	for y in $(cat InputRR.txt); do
+
+for y in $(cat InputRR.txt); do
 
 		case $x in
 		0)
@@ -251,10 +254,11 @@ function Fichero {
 }
 
 
-#Función EspAcu; aumenta el tiempo de espera acumulado de cada proceso
-function EspAcu() {
+#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera acumulado de cada proceso pasada
+# su posicion como parametro $1
+function aumentaTiempoAcumuladoProceso() {
 
-	echo "Entra a EspAcu"
+	echo "Entra a aumentaTiempoAcumuladoProceso"
 
 	for (( y=0; y<$proc; y++ )) do
 
@@ -270,10 +274,10 @@ function EspAcu() {
 }
 
 
-#Función media; calcula la media de valores de un vector
-function media() {
+#Función calculaMediaValoresVector; calcula la media de valores de un vector
+function calculaMediaValoresVector() {
 
-	echo "Entra a media"
+	echo "Entra a calculaMediaValoresVector"
 
 	local array=("${!1}")
 	media=0
@@ -289,10 +293,10 @@ function media() {
 }
 
 
-#Función OcuMem; llena la memoria del proceso pasado por parámetro. $1  nombre de proceso, $2 origen $3 fin $4 identificador vectorial del proceso
-function OcuMem() {
+#Función asignaMemoria; llena la memoria del proceso pasado por parámetro. $1  nombre de proceso, $2 origen $3 fin $4 identificador vectorial del proceso
+function asignaMemoria() {
 
-	echo "Entra a OcuMem"
+	echo "Entra a asignaMemoria"
 
 	for (( y=$2; y<=$3; y++ )) do
 		mem[$y]=$1
@@ -302,10 +306,10 @@ function OcuMem() {
 }
 
 
-#Función DesOcuMem; libera la memoria de un determinado sitio. $1 origen $2 final
-function DesOcuMem() {
+#Función desasignaMemoria; libera la memoria de un determinado sitio. $1 origen $2 final
+function desasignaMemoria() {
 
-	echo "Entra a DesOcuMem"
+	echo "Entra a desasignaMemoria"
 
 	for (( y=$1; y <= $2; y++ )) do
 		mem[$y]=${Li}
@@ -409,7 +413,7 @@ function AsignaMem() {
 
 					let proc_memF[$zed]=proc_memI[$zed]+proc_mem[$zed]
 					let proc_memF[$zed]=proc_memF[$zed]-1
-					OcuMem ${proc_name[$zed]} ${proc_memI[$zed]} ${proc_memF[$zed]} $zed
+					asignaMemoria ${proc_name[$zed]} ${proc_memI[$zed]} ${proc_memF[$zed]} $zed
 					auxiliar=1
 
 					#Metemos el procenso en la cola de ejecución
@@ -455,11 +459,11 @@ function reubicar {
 		elif [ $before -eq 1 -a ${mem_dir[$w]} -ne -1 ];then
 				aux=${mem_dir[$w]}
 				aux2=1
-				DesOcuMem ${proc_memI[$aux]} ${proc_memF[$aux]}
+				desasignaMemoria ${proc_memI[$aux]} ${proc_memF[$aux]}
 				proc_memI[$aux]=$aux_init
 				let proc_memF[$aux]=proc_memI[$aux]+proc_mem[$aux]
 				let proc_memF[$aux]=proc_memF[$aux]-1
-				OcuMem ${proc_name[$aux]} ${proc_memI[$aux]} ${proc_memF[$aux]} $aux
+				asignaMemoria ${proc_name[$aux]} ${proc_memI[$aux]} ${proc_memF[$aux]} $aux
 				before=0
 				w=proc_memF[$aux]
 		fi
@@ -481,6 +485,7 @@ function reubicar {
 
 
 #Función SiNo; comprueba si se ha medito un si o un no
+#return 1 si se ha introducido s, S, n, N de lo contrario devuelve 0.
 function SiNo(){
 
 	echo "Entra a SiNo"
@@ -602,9 +607,9 @@ function err {
 }
 
 
-##Comienzo del programa.
+##################################################  COMIENZO DEL PROGRAMA  #########################################################################
 
-#Impresión de la cabecera de entrada.
+#Impresión de la cabecera de inicio del programa.
 clear
 echo -e "${minuscyan} -------------------------------------------------------------------------------------------------- ${NC}"
 echo -e "$info		Práctica de Control - Sistemas Operativos - Grado en Ingeniería Informática	   $info"
@@ -631,7 +636,6 @@ echo "|				        CC-BY-SA (Documentación)				   |"  >> $output
 echo "|					    GPLv3 (Código)					   |"  >> $output
 echo " -------------------------------------------------------------------------------------------------- "  >> $output
 
-
 #Recogida de datos
 read -p "Meter lo datos de manera manual? [s,n] " manu
 SiNo $manu
@@ -643,10 +647,12 @@ while [ $? -eq 0 ];do
 done
 
 if [ $manu = "s" -o $manu = "S" ];then
-	j=0
 
+	j=0 #variable a modo de bandera para los siguientes bucles.
 	while [ $j -eq 0 ] 2> /dev/null ;do
+
 		read -p "Introduzca al cantidad de memoria (MB): " mem_aux
+
 		if [ \( $mem_aux -ge 0 \) -a \( $? -eq 0 \) ] 2> /dev/null;then
 			j=1
 		else
@@ -656,8 +662,9 @@ if [ $manu = "s" -o $manu = "S" ];then
 	done
 
 	echo "$mem_aux" > InputRR.txt
-	j=0
 
+																														#################################################3ESTO VA FUERA SANTI
+	j=0
 	while [ $j -eq 0 ] 2> /dev/null ;do
 		read -p "Introduzca el quantum: " quantum
 
@@ -682,8 +689,9 @@ else
 	fi
 
 fi
-j=0
 
+#Se pide la forma de ejecución del script
+j=0
 while [ $j -eq 0 ]; do
 
 	echo "Opciones de ejecución:"
@@ -700,32 +708,36 @@ while [ $j -eq 0 ]; do
 
 done
 
-#Vectores de informacion
-proc_name={} #Nombre de cada proceso
-proc_arr={} #Turno de llegada del proceso
-proc_exe={} #Tiempo de ejecución o ráfaga; se reducirá según el quantum
-proc_mem={} #Memoria que necesita cada proceso
-proc_order={} #Orden de llegada
-proc_stop={} #Procesos que no pueden ejecutarse porque no tienen memoria (1 = parado, 0 no parado)
+#Vectores de información
+proc_name={}	#Nombre de cada proceso
+proc_arr={}		#Turno de llegada del proceso
+proc_exe={}		#Tiempo de ejecución o ráfaga; se reducirá en cada ciclo de reloj
+proc_mem={}		#Memoria que necesita cada proceso
+proc_order={}	#Orden de llegada
+proc_stop={}	#Procesos que no pueden ejecutarse porque no tienen memoria (1 = parado, 0 no parado)
+
 clear
+
 i=1
 t=0
 mem_total=$mem_aux
 
 if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
+	#bucle que recoge los procesos
 	while [ $t -eq 0 ];do
-		j=0
 
+		#Recogida de nombre proceso
+		j=0
 		while [ $j -eq 0 ];do
 			error=0
 			read -p "Introduzca el nombre del proceso $i (p$i): " proc_name[$(expr $i-1)]
-			CompNomb
+			validaNombre
 
 			if [ -z "${proc_name[$(expr $i-1)]}" ] 2> /dev/null ;then
 				proc_name[$(expr $i-1)]="p$i"
 				error=0
-				CompNomb
+				validaNombre # <--- Esta funcion hace uso de la variable error y la variable i en su body
 
 				if [ $error -eq 0 ];then
 					j=1
@@ -809,7 +821,7 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 		fi
 
 		clear
-		Informacion
+		imprimeInformacion
 		let i=i+1
 
 	done
@@ -817,13 +829,13 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 else
 
 	clear
-	Fichero
+	leeDatosDesdeFichero
 	i=$proc
-	Informacion
+	imprimeInformacion
 
 fi
 
-InformacionPrint
+imprimeInformacionAFichero
 mem_total=$mem_aux
 
 if [ $auto != "c" ];then
@@ -846,7 +858,7 @@ for (( y=0; y<$proc; y++ )) do
 	proc_memI[$y]="-1"
 done
 
-declare partition[$MAX]	  #Tamaño de las distintas particiones libres
+declare partition[$MAX]	  	#Tamaño de las distintas particiones libres
 declare proc_arr_aux[$proc] #Momento en el que el proceso puede ocupar memoria
 
 for (( y=0; y<$proc; y++ )) do
@@ -913,7 +925,7 @@ while [ $e -eq 0 ];do
 		let clock++
 		let quantum_aux=quantum_aux-1
 		let proc_exe[$z]=proc_exe[$z]-1
-		EspAcu 0
+		aumentaTiempoAcumuladoProceso 0
 		exe=1
 	fi
 
@@ -957,7 +969,7 @@ while [ $e -eq 0 ];do
 	#Si el proceso se ha terminado
 	if [ $fin -eq 1 ];then
     	let mem_aux=mem_aux+proc_mem[$z]
-    	DesOcuMem ${proc_memI[$z]} ${proc_memF[$z]}
+    	desasignaMemoria ${proc_memI[$z]} ${proc_memF[$z]}
     	proc_memI[$z]="-2"
 
 		if [ $auto != "c" ];then
@@ -969,7 +981,7 @@ while [ $e -eq 0 ];do
 		fin=0
 	fi
 
-	PrintMem
+	imprimeMemoria
 	Estado
 
 	if [ $auto = "a" ];then
@@ -987,7 +999,7 @@ while [ $e -eq 0 ];do
 			e=1
 	elif [ $listTam -eq 0 ] && [ $exe -eq 0 ];then
 		let clock++
-		EspAcu 1
+		aumentaTiempoAcumuladoProceso 1
 	else
 		exe=0
 	fi
@@ -1038,9 +1050,9 @@ fi
 echo " --------------------------------------------------------------------------------------------------------------- "  >> $output
 
 #Cálculo de valores medios
-media 'proc_waitR[@]'
+calculaMediaValoresVector 'proc_waitR[@]'
 media_wait=$?
-media 'proc_retR[@]'
+calculaMediaValoresVector 'proc_retR[@]'
 media_ret=$?
 
 if [ $auto != "c" ];then
