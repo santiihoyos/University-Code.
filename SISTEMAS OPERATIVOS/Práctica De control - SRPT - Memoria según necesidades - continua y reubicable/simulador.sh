@@ -101,7 +101,7 @@ function Orden {
 
 	#Inicializo el vector de orden
 	for (( p=0; p<$i; p++ )) do
-		proc_order[$p]=-1
+		ordenDeLlegada[$p]=-1
 	done
 
 	for (( p=$(expr $i-1); p>=0; p-- )) do
@@ -112,7 +112,7 @@ function Orden {
 
 			for (( z=$p, coin=0; z<=$(expr $i-1); z++ )) do
 
-				if [ $jk -eq "${proc_order[$z]}" ];then
+				if [ $jk -eq "${ordenDeLlegada[$z]}" ];then
 					coin=1
 				fi
 
@@ -120,16 +120,16 @@ function Orden {
 
 		if [ $coin -eq 0 ];then
 
-			if [ ${proc_arr[$jk]} -ge $max ];then
+			if [ ${tiemposDeLlegada[$jk]} -ge $max ];then
 				aux=$jk
-				max=${proc_arr[$jk]}
+				max=${tiemposDeLlegada[$jk]}
 			fi
 
 		fi
 
 		done
 
-		proc_order[$p]=$aux
+		ordenDeLlegada[$p]=$aux
 
 	done
 }
@@ -143,7 +143,7 @@ function validaNombre {
 	local j
 	local x=0
 
-	for j in ${proc_name[$(expr $i - 1)]}; do
+	for j in ${nombresProcesos[$(expr $i - 1)]}; do
 		let x++
 	done
 
@@ -154,7 +154,7 @@ function validaNombre {
 		#La comprobación solo se hace si no es el primer nombre
 		for ((z=0 ; z<$(expr $i-1) ; z++ )) do
 
-			if [ "${proc_name[$(expr $i-1)]}" == "${proc_name[$z]}" ];then
+			if [ "${nombresProcesos[$(expr $i-1)]}" == "${nombresProcesos[$z]}" ];then
 				error=1
 			fi
 
@@ -174,9 +174,9 @@ function imprimeInformacion {
 	echo -e "$info    Proceso    $info    Llegada    $info     Ráfaga    $info    Memoria    $info"
 
 	for (( y=0; y<$i; y++)) do
-		l=${proc_order[$y]}
+		l=${ordenDeLlegada[$y]}
 		echo -e "${minuscyan} --------------------------------------------------------------- ${NC}"
-		echo -e "$info	${proc_name[$l]}	$info	${proc_arr[$l]}	$info	${proc_exe[$l]}	$info	${proc_mem[$l]}	$info"
+		echo -e "$info	${nombresProcesos[$l]}	$info	${tiemposDeLlegada[$l]}	$info	${tiemposDeCpu[$l]}	$info	${memoriaNecesaria[$l]}	$info"
 	done
 
 	echo -e " ${minuscyan}---------------------------------------------------------------${NC} "
@@ -193,9 +193,9 @@ function imprimeInformacionAFichero {
 	echo "|    Proceso    |    Llegada    |     Ráfaga    |    Memoria    |"  >> $output
 
 		for (( y=0; y<$proc; y++)) do
-			l=${proc_order[$y]}
+			l=${ordenDeLlegada[$y]}
 			echo " --------------------------------------------------------------- "  >> $output
-			echo "|	${proc_name[$l]}	|	${proc_arr[$l]}	|	${proc_exe[$l]}	|	${proc_mem[$l]}	|"  >> $output
+			echo "|	${nombresProcesos[$l]}	|	${tiemposDeLlegada[$l]}	|	${tiemposDeCpu[$l]}	|	${memoriaNecesaria[$l]}	|"  >> $output
 		done
 
 	echo " --------------------------------------------------------------- "  >> $output
@@ -221,12 +221,12 @@ for y in $(cat InputRR.txt); do
 			quantum=$(echo $y)
 			;;
 		*)
-			proc_name[$r]=$(echo $y | cut -f1 -d";")
-			proc_arr[$r]=$(echo $y | cut -f2 -d";")
-			proc_exe[$r]=$(echo $y | cut -f3 -d";")
-			proc_mem[$r]=$(echo $y | cut -f4 -d";")
+			nombresProcesos[$r]=$(echo $y | cut -f1 -d";")
+			tiemposDeLlegada[$r]=$(echo $y | cut -f2 -d";")
+			tiemposDeCpu[$r]=$(echo $y | cut -f3 -d";")
+			memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
 
-			if [ -z ${proc_mem[$r]} ];then
+			if [ -z ${memoriaNecesaria[$r]} ];then
 				err "El fichero InputRR.txt está incompleto, se cargaran los datos por defecto"
 				cat default.txt > InputRR.txt
 				read -p "Pulse enter para reiniciar"
@@ -250,7 +250,7 @@ for y in $(cat InputRR.txt); do
 	fi
 
 	echo "El quantum es $quantum" >> $output
-	proc=${#proc_name[@]}
+	proc=${#nombresProcesos[@]}
 }
 
 
@@ -262,7 +262,7 @@ function aumentaTiempoAcumuladoProceso() {
 
 	for (( y=0; y<$proc; y++ )) do
 
-		if [ "${proc_exe[$y]}" -ne 0 ];then
+		if [ "${tiemposDeCpu[$y]}" -ne 0 ];then
 
 			if [ $y -ne $z -o $1 -eq 1 ];then
 				let proc_waitA[$y]=proc_waitA[$y]+1
@@ -365,21 +365,21 @@ function AsignaMem() {
 	salida=0
 
 	for (( alpha=0; alpha<$proc && salida==0; alpha++ )) do
-		zed=${proc_order[$alpha]}
+		zed=${ordenDeLlegada[$alpha]}
 
-		if [ $1 -ge "${proc_arr[$zed]}" ];then
+		if [ $1 -ge "${tiemposDeLlegada[$zed]}" ];then
 
-			if [ $mem_aux -lt ${proc_mem[$zed]} ];then
+			if [ $mem_aux -lt ${memoriaNecesaria[$zed]} ];then
 
-				if [ ${proc_stop[$zed]} -eq 0 ];then
+				if [ ${procesosNoEjecutables[$zed]} -eq 0 ];then
 
 					if [ $cola -eq $zed ]  2> /dev/null ;then
 
 						if [ $auto != "c" ];then
-							echo "El proceso ${proc_name[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante"
+							echo "El proceso ${nombresProcesos[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante"
 						fi
 
-						echo "El proceso ${proc_name[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante" >> $output
+						echo "El proceso ${nombresProcesos[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante" >> $output
 						#Bloqueamos la cola
 						cola=$zed
 						salida=1
@@ -396,10 +396,10 @@ function AsignaMem() {
 					#Ahora debo buscar la particion de memoria que menos esté ocupada
 					for (( ex=0; ex<=$part; ex++ )) do
 
-						if [ ${proc_mem[$zed]} -le ${partition[$ex]} ];then
+						if [ ${memoriaNecesaria[$zed]} -le ${partition[$ex]} ];then
 							if [ ${partition[$ex]} -lt $memoriaLibre ];then
 								memoriaLibre=${partition[$ex]}
-								proc_memI[$zed]=${part_init[$ex]}
+								memoriaNecesariaI[$zed]=${part_init[$ex]}
 								reubic=0
 							fi
 						fi
@@ -408,27 +408,27 @@ function AsignaMem() {
 
 					if [ $reubic -eq 1 ];then
 						reubicar
-						proc_memI[$zed]=$?
+						memoriaNecesariaI[$zed]=$?
 					fi
 
-					let proc_memF[$zed]=proc_memI[$zed]+proc_mem[$zed]
-					let proc_memF[$zed]=proc_memF[$zed]-1
-					asignaMemoria ${proc_name[$zed]} ${proc_memI[$zed]} ${proc_memF[$zed]} $zed
+					let memoriaNecesariaF[$zed]=memoriaNecesariaI[$zed]+memoriaNecesaria[$zed]
+					let memoriaNecesariaF[$zed]=memoriaNecesariaF[$zed]-1
+					asignaMemoria ${nombresProcesos[$zed]} ${memoriaNecesariaI[$zed]} ${memoriaNecesariaF[$zed]} $zed
 					auxiliar=1
 
 					#Metemos el procenso en la cola de ejecución
 					list[$listTam]=$zed
 					let listTam++
 					let total++
-					let mem_aux=mem_aux-proc_mem[$zed]
+					let mem_aux=mem_aux-memoriaNecesaria[$zed]
 					let next=alpha+1
-					cola=${proc_order[$next]}
+					cola=${ordenDeLlegada[$next]}
 
 					if [ $auto != "c" ];then
-						echo -e "${yellow}El proceso ${proc_name[$zed]} ha entrado en memoria${NC}"
+						echo -e "${yellow}El proceso ${nombresProcesos[$zed]} ha entrado en memoria${NC}"
 					fi
 
-					echo "El proceso ${proc_name[$zed]} ha entrado en memoria" >> $output
+					echo "El proceso ${nombresProcesos[$zed]} ha entrado en memoria" >> $output
 				fi
 
 			fi
@@ -459,13 +459,13 @@ function reubicar {
 		elif [ $before -eq 1 -a ${mem_dir[$w]} -ne -1 ];then
 				aux=${mem_dir[$w]}
 				aux2=1
-				desasignaMemoria ${proc_memI[$aux]} ${proc_memF[$aux]}
-				proc_memI[$aux]=$aux_init
-				let proc_memF[$aux]=proc_memI[$aux]+proc_mem[$aux]
-				let proc_memF[$aux]=proc_memF[$aux]-1
-				asignaMemoria ${proc_name[$aux]} ${proc_memI[$aux]} ${proc_memF[$aux]} $aux
+				desasignaMemoria ${memoriaNecesariaI[$aux]} ${memoriaNecesariaF[$aux]}
+				memoriaNecesariaI[$aux]=$aux_init
+				let memoriaNecesariaF[$aux]=memoriaNecesariaI[$aux]+memoriaNecesaria[$aux]
+				let memoriaNecesariaF[$aux]=memoriaNecesariaF[$aux]-1
+				asignaMemoria ${nombresProcesos[$aux]} ${memoriaNecesariaI[$aux]} ${memoriaNecesariaF[$aux]} $aux
 				before=0
-				w=proc_memF[$aux]
+				w=memoriaNecesariaF[$aux]
 		fi
 
 	done
@@ -479,7 +479,7 @@ function reubicar {
 		echo "La memoria se ha reubicado" >> $output
 	fi
 
-	let ret=${proc_memF[$aux]}+1
+	let ret=${memoriaNecesariaF[$aux]}+1
 	return $ret
 }
 
@@ -511,7 +511,7 @@ function lista {
 	proceso=${list[0]}
 
 	#Cuando un proceso termina ya no vuelve a colocarse en la cola, y el tamaño de la cola se reduce
-	if [ ${proc_exe[$proceso]} -eq 0 ];then
+	if [ ${tiemposDeCpu[$proceso]} -eq 0 ];then
 		let listTam--
 
 		for (( cont=0;cont<$listTam;cont++ )) do
@@ -560,32 +560,32 @@ function Estado {
 
 	for (( p=0; p<$proc;p++ )) do
 
-		pp=${proc_order[$p]}
+		pp=${ordenDeLlegada[$p]}
 
-		if [ ${proc_exe[$pp]} -eq 0 ];then
+		if [ ${tiemposDeCpu[$pp]} -eq 0 ];then
 			restante="END"
 		else
-			restante=${proc_exe[$pp]}
+			restante=${tiemposDeCpu[$pp]}
 		fi
 
-		if [ ${proc_memI[$pp]} = "-1" ] 2> /dev/null;then
+		if [ ${memoriaNecesariaI[$pp]} = "-1" ] 2> /dev/null;then
 			memIni="NA"
 			memFin="NA"
-		elif [ ${proc_memI[$pp]} = "-2" ] 2> /dev/null ;then
+		elif [ ${memoriaNecesariaI[$pp]} = "-2" ] 2> /dev/null ;then
 			memIni="END"
 			memFin="END"
 		else
-			memIni=${proc_memI[$pp]}
-			memFin=${proc_memF[$pp]}
+			memIni=${memoriaNecesariaI[$pp]}
+			memFin=${memoriaNecesariaF[$pp]}
 		fi
 
 		if [ $auto != "c" ];then
 			echo -e "${minuscyan} ----------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
-			echo -e "$info	${proc_name[$pp]}	$info	${proc_arr[$pp]}	$info		${proc_waitA[$pp]}		$info		$restante		$info	${proc_mem[$pp]}	$info	$memIni	$info	$memFin	$info"
+			echo -e "$info	${nombresProcesos[$pp]}	$info	${tiemposDeLlegada[$pp]}	$info		${proc_waitA[$pp]}		$info		$restante		$info	${memoriaNecesaria[$pp]}	$info	$memIni	$info	$memFin	$info"
 		fi
 
 		echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
-		echo "|	${proc_name[$pp]}	|	${proc_arr[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${proc_mem[$pp]}	|	$memIni	|	$memFin	|" >>$output
+		echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|" >>$output
 
 	done
 
@@ -709,12 +709,12 @@ while [ $j -eq 0 ]; do
 done
 
 #Vectores de información
-proc_name={}	#Nombre de cada proceso
-proc_arr={}		#Turno de llegada del proceso
-proc_exe={}		#Tiempo de ejecución o ráfaga; se reducirá en cada ciclo de reloj
-proc_mem={}		#Memoria que necesita cada proceso
-proc_order={}	#Orden de llegada
-proc_stop={}	#Procesos que no pueden ejecutarse porque no tienen memoria (1 = parado, 0 no parado)
+nombresProcesos={}	#Nombre de cada proceso
+tiemposDeLlegada={}		#Turno de llegada del proceso
+tiemposDeCpu={}		#Tiempo de ejecución o ráfaga; se reducirá en cada ciclo de reloj
+memoriaNecesaria={}		#Memoria que necesita cada proceso
+ordenDeLlegada={}	#Orden de llegada
+procesosNoEjecutables={}	#Procesos que no pueden ejecutarse porque no tienen memoria (1 = parado, 0 no parado)
 
 clear
 
@@ -731,11 +731,11 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 		j=0
 		while [ $j -eq 0 ];do
 			error=0
-			read -p "Introduzca el nombre del proceso $i (p$i): " proc_name[$(expr $i-1)]
+			read -p "Introduzca el nombre del proceso $i (p$i): " nombresProcesos[$(expr $i-1)]
 			validaNombre
 
-			if [ -z "${proc_name[$(expr $i-1)]}" ] 2> /dev/null ;then
-				proc_name[$(expr $i-1)]="p$i"
+			if [ -z "${nombresProcesos[$(expr $i-1)]}" ] 2> /dev/null ;then
+				nombresProcesos[$(expr $i-1)]="p$i"
 				error=0
 				validaNombre # <--- Esta funcion hace uso de la variable error y la variable i en su body
 
@@ -751,13 +751,13 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
 		done
 
-		printf -- "%s;" ${proc_name[$(expr $i-1)]} >> InputRR.txt
+		printf -- "%s;" ${nombresProcesos[$(expr $i-1)]} >> InputRR.txt
 		j=0
 
 		while [ $j -eq 0 ];do
-			read -p "Introduzca el turno de llegada de ${proc_name[$(expr $i-1)]}: " proc_arr[$(expr $i-1)]
+			read -p "Introduzca el turno de llegada de ${nombresProcesos[$(expr $i-1)]}: " tiemposDeLlegada[$(expr $i-1)]
 
-			if [ "${proc_arr[$(expr $i-1)]}" -ge 0 ] 2> /dev/null ;then
+			if [ "${tiemposDeLlegada[$(expr $i-1)]}" -ge 0 ] 2> /dev/null ;then
 				j=1
 			else
 				err "Dato incorrecto"
@@ -765,13 +765,13 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
 		done
 
-		printf -- "%s;" ${proc_arr[$(expr $i-1)]} >> InputRR.txt
+		printf -- "%s;" ${tiemposDeLlegada[$(expr $i-1)]} >> InputRR.txt
 		j=0
 
 		while [ $j -eq 0 ];do
-			read -p "Introduzca la ráfaga (tiempo de ejecución) de ${proc_name[$(expr $i-1)]}: " proc_exe[$(expr $i-1)]
+			read -p "Introduzca la ráfaga (tiempo de ejecución) de ${nombresProcesos[$(expr $i-1)]}: " tiemposDeCpu[$(expr $i-1)]
 
-			if [ "${proc_exe[$(expr $i-1)]}" -gt 0 ] 2> /dev/null ;then
+			if [ "${tiemposDeCpu[$(expr $i-1)]}" -gt 0 ] 2> /dev/null ;then
 				j=1
 			else
 				err "Dato incorrecto"
@@ -779,13 +779,13 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
 		done
 
-		printf -- "%s;" ${proc_exe[$(expr $i-1)]} >> InputRR.txt
+		printf -- "%s;" ${tiemposDeCpu[$(expr $i-1)]} >> InputRR.txt
 		j=0
 
 		while [ $j -eq 0 ];do
-			read -p "Introduzca la memoria (MB) que necesita ${proc_name[$(expr $i-1)]}: " proc_mem[$(expr $i-1)]
+			read -p "Introduzca la memoria (MB) que necesita ${nombresProcesos[$(expr $i-1)]}: " memoriaNecesaria[$(expr $i-1)]
 
-			if [ "${proc_mem[$(expr $i-1)]}" -le $mem_total -a "${proc_mem[$(expr $i-1)]}" -gt 0 ] 2> /dev/null ;then
+			if [ "${memoriaNecesaria[$(expr $i-1)]}" -le $mem_total -a "${memoriaNecesaria[$(expr $i-1)]}" -gt 0 ] 2> /dev/null ;then
 				j=1
 			else
 				err "Dato incorrecto"
@@ -793,7 +793,7 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
 		done
 
-		printf -- "%s\n" ${proc_mem[$(expr $i-1)]} >> InputRR.txt
+		printf -- "%s\n" ${memoriaNecesaria[$(expr $i-1)]} >> InputRR.txt
 		j=0
 
 		while [ $j -eq 0 ];do
@@ -817,7 +817,7 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 
 		if [ $p = "n" -o $p = "N" ];then
 			t=1
-			proc=${#proc_name[@]}
+			proc=${#nombresProcesos[@]}
 		fi
 
 		clear
@@ -851,29 +851,29 @@ done
 
 declare proc_waitA[$proc] #Tiempo de espera acumulado
 declare proc_waitR[$proc] #Tiempo de espera real
-declare proc_memI[$proc]  #Palabra inicial
-declare proc_memF[$proc]  #Palabra final
+declare memoriaNecesariaI[$proc]  #Palabra inicial
+declare memoriaNecesariaF[$proc]  #Palabra final
 
 for (( y=0; y<$proc; y++ )) do
-	proc_memI[$y]="-1"
+	memoriaNecesariaI[$y]="-1"
 done
 
 declare partition[$MAX]	  	#Tamaño de las distintas particiones libres
-declare proc_arr_aux[$proc] #Momento en el que el proceso puede ocupar memoria
+declare tiemposDeLlegada_aux[$proc] #Momento en el que el proceso puede ocupar memoria
 
 for (( y=0; y<$proc; y++ )) do
-	proc_arr_aux[$y]=${proc_arr[$y]}
+	tiemposDeLlegada_aux[$y]=${tiemposDeLlegada[$y]}
 done
 
-min=${proc_order[0]}
-clock=${proc_arr[$min]}	#Tiempo actual actual
+min=${ordenDeLlegada[0]}
+clock=${tiemposDeLlegada[$min]}	#Tiempo actual actual
 
 for (( i=0; i<$proc; i++ )) do
 	proc_waitA[$i]=$clock
 done
 
 for (( y=0; y<$proc; y++ )) do
-	proc_stop[$y]=0
+	procesosNoEjecutables[$y]=0
 done
 
 declare mem_dir[$mem_aux]
@@ -894,7 +894,7 @@ fin=0
 mot=0
 end=0 #Cantidad de procesos finalizados
 total=0 #Procesos introducidos a la memoria
-cola=${proc_order[0]}
+cola=${ordenDeLlegada[0]}
 
 #Comienza el agoritmo a funcionar
 while [ $e -eq 0 ];do
@@ -915,33 +915,33 @@ while [ $e -eq 0 ];do
 		clock_time=$clock
 
 		if [ $auto != "c" ];then
-			echo -e "${blue}El proceso ${proc_name[$z]} entra ahora en el procesador${NC}"
+			echo -e "${blue}El proceso ${nombresProcesos[$z]} entra ahora en el procesador${NC}"
 		fi
 
-		echo "El proceso ${proc_name[$z]} entra ahora en el procesador" >> $output
+		echo "El proceso ${nombresProcesos[$z]} entra ahora en el procesador" >> $output
 	fi
 
 	if [ $quantum_aux -gt 0 ] && [ $listTam -ne 0 ];then #Pasa un ciclo
 		let clock++
 		let quantum_aux=quantum_aux-1
-		let proc_exe[$z]=proc_exe[$z]-1
+		let tiemposDeCpu[$z]=tiemposDeCpu[$z]-1
 		aumentaTiempoAcumuladoProceso 0
 		exe=1
 	fi
 
-	if [ "${proc_exe[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then #El proceso termina en este tiempo
+	if [ "${tiemposDeCpu[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then #El proceso termina en este tiempo
 		let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumento antes por lo que vamos hacia atras)
-		let proc_retR[$z]=proc_ret[$z]-proc_arr[$z]
+		let proc_retR[$z]=proc_ret[$z]-tiemposDeLlegada[$z]
 		quantum_aux=0
 		fin=1
 		mot=1
 		let end++
 
 		if [ $auto != "c" ];then
-			echo "El proceso ${proc_name[$z]} termina en esta ráfaga"
+			echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga"
 		fi
 
-		echo "El proceso ${proc_name[$z]} termina en esta ráfaga" >> $output
+		echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga" >> $output
 	fi
 
 	if [ $quantum_aux -eq 0 ] && [ $listTam -ne 0 ];then #Fin del uso de quantum del proceso
@@ -949,34 +949,34 @@ while [ $e -eq 0 ];do
 		if [ $mot -eq 0 ];then
 
 			if [ $auto != "c" ];then
-				echo "El proceso ${proc_name[$z]} agota su quantum en este tiempo, ráfagas restantes: ${proc_exe[$z]}"
+				echo "El proceso ${nombresProcesos[$z]} agota su quantum en este tiempo, ráfagas restantes: ${tiemposDeCpu[$z]}"
 			fi
 
-			echo "El proceso ${proc_name[$z]} agota su quantum en este tiempo, ráfagas restantes ${proc_exe[$z]}" >> $output
+			echo "El proceso ${nombresProcesos[$z]} agota su quantum en este tiempo, ráfagas restantes ${tiemposDeCpu[$z]}" >> $output
 
 		else
 			mot=0
 		fi
 
 		if [ $auto != "c" ];then
-			echo -e "${cyan_back}|${proc_name[$z]}($clock_time,${proc_exe[$z]})|${NC}"
+			echo -e "${cyan_back}|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|${NC}"
 		fi
-		echo "|${proc_name[$z]}($clock_time,${proc_exe[$z]})|" >> $output
+		echo "|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|" >> $output
 		quantum_aux=$quantum
 		lista
 	fi
 
 	#Si el proceso se ha terminado
 	if [ $fin -eq 1 ];then
-    	let mem_aux=mem_aux+proc_mem[$z]
-    	desasignaMemoria ${proc_memI[$z]} ${proc_memF[$z]}
-    	proc_memI[$z]="-2"
+    	let mem_aux=mem_aux+memoriaNecesaria[$z]
+    	desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]}
+    	memoriaNecesariaI[$z]="-2"
 
 		if [ $auto != "c" ];then
-			echo -e "${blue}El proceso ${proc_name[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada${NC}"
+			echo -e "${blue}El proceso ${nombresProcesos[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada${NC}"
 		fi
 
-		echo "El proceso ${proc_name[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada" >> $output
+		echo "El proceso ${nombresProcesos[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada" >> $output
 		auxiliar=1
 		fin=0
 	fi
@@ -1009,8 +1009,8 @@ done
 #Damos valor a proc_waitR
 for (( y=0; y<$proc; y++ )) do
 
-	if [ "${proc_stop[$y]}" -eq 0 ] 2> /dev/null ;then
-		let proc_waitR[$y]=proc_waitA[$y]-proc_arr[$y]
+	if [ "${procesosNoEjecutables[$y]}" -eq 0 ] 2> /dev/null ;then
+		let proc_waitR[$y]=proc_waitA[$y]-tiemposDeLlegada[$y]
 	fi
 
 done
@@ -1035,11 +1035,11 @@ for (( y=0; y<$proc; y++ )) do
 
 	if [ $auto != "c" ];then
 		echo -e " ${minuscyan}---------------------------------------------------------------------------------------------------------------${NC} "
-		echo -e "$info	${proc_name[$y]}	$info		${proc_waitA[$y]}		$info		${proc_waitR[$y]}		$info	${proc_ret[$y]}	$info	${proc_retR[$y]}	$info"
+		echo -e "$info	${nombresProcesos[$y]}	$info		${proc_waitA[$y]}		$info		${proc_waitR[$y]}		$info	${proc_ret[$y]}	$info	${proc_retR[$y]}	$info"
 	fi
 
 	echo " --------------------------------------------------------------------------------------------------------------- "  >> $output
-	echo "|	${proc_name[$y]}	|		${proc_waitA[$y]}		|		${proc_waitR[$y]}		|	${proc_ret[$y]}	|	${proc_retR[$y]}	|"  >> $output
+	echo "|	${nombresProcesos[$y]}	|		${proc_waitA[$y]}		|		${proc_waitR[$y]}		|	${proc_ret[$y]}	|	${proc_retR[$y]}	|"  >> $output
 
 done
 
