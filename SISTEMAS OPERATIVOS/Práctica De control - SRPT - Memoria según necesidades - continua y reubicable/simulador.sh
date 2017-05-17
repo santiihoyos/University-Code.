@@ -8,7 +8,7 @@
 #Truncado de la memoria
 #Aquí se guarda la variable que determina la cantidad de memoria que aparece en cada linea, por defecto 0 (sin truncamiento)
 memTruncada=$1
-if [ -z $memTruncada ];then
+if [ -z "$memTruncada" ];then
 	memTruncada=0
 fi
 
@@ -41,9 +41,9 @@ function imprimeMemoria {
 
 	echo "Entra a imprimeMemoria"
 
-	for (( jk=0; jk<$mem_total; jk++ )) do
+	for (( jk=0; jk<mem_total; jk++ )) do
 
-		if [ ${mem[$jk]} = $Li ];then
+		if [ "${mem[$jk]}" = "$Li" ];then
 			mem_print[$jk]="Li"
 		else
 			mem_print[$jk]=${mem[$jk]}
@@ -51,40 +51,40 @@ function imprimeMemoria {
 
 	done
 
-	if [ $auto != "c" ];then
+	if [ "$auto" != "c" ];then
 		echo -e "${purple}Memoria libre actual $mem_aux MB${NC}"
-		echo -e "${gree}Distribución actual de la memoria${NC}"
+		echo -e "${green}Distribución actual de la memoria${NC}"
 	fi
 
-	echo "Memoria libre actual $mem_aux MB$" >> $output
-	echo "Distribución actual de la memoria" >> $output
+	echo "Memoria libre actual $mem_aux MB$" >> "$output"
+	echo "Distribución actual de la memoria" >> "$output"
 
 
-	if [ $memTruncada -eq 0 ] 2> /dev/null;then
+	if [ "$memTruncada" -eq 0 ] 2> /dev/null;then
 
-		if [ $auto != "c" ];then
+		if [ "$auto" != "c" ];then
 			echo -e "${mem[@]}"
 		fi
 
-		echo "${mem_print[@]}" >> $output
+		echo "${mem_print[@]}" >> "$output"
 		auxiliar=0
 
 	else
 		auxiliarMemoria=0
 
-		for (( jk=0; jk<$mem_total; jk++ ))	do
+		for (( jk=0; jk<mem_total; jk++ ))	do
 
 			if [ $auxiliarMemoria -eq $memTruncada ] 2> /dev/null;then
 				auxiliarMemoria=0
 				printf "\n"
-				printf "\n" >> $output
+				printf "\n" >> "$output"
 			fi
 
-			if [ $auto != "c" ];then
-				printf -- "%s " ${mem_print[$jk]}
+			if [ "$auto" != "c" ];then
+				printf -- "%s " "${mem_print[$jk]}"
 			fi
 
-			printf -- "%s " ${mem_print[$jk]} >> $output
+			printf -- "%s " "${mem_print[$jk]} >> $output"
 			let auxiliarMemoria=auxiliarMemoria+1
 
 		done
