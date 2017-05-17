@@ -609,10 +609,10 @@ clear
 echo -e "${minuscyan} -------------------------------------------------------------------------------------------------- ${NC}"
 echo -e "$info		Práctica de Control - Sistemas Operativos - Grado en Ingeniería Informática	   $info"
 echo -e "$info                                               					       	   $info"
-echo -e "$info		   Round Robin con particiones dinámicas ajustada al mejor y reubicable	    	   $info"
+echo -e "$info		   SRPT, memoria según necesidades,coninua y reubicable               	    	   $info"
 echo -e "$info                                                                                                  $info"
 echo -e "$info					    Programado por:					   $info"
-echo -e "$info			     José Luis Garrido Labrador <jgl0062@alu.ubu.es>			   $info"
+echo -e "$info			     Santiago Hoyos Zea <shz1001@alu.ubu.es>        			   $info"
 echo -e "$info                                                                                                  $info"
 echo -e "$info					      Licencias:					   $info"
 echo -e "$info				        CC-BY-SA (Documentación)				   $info"
@@ -621,10 +621,10 @@ echo -e "${minuscyan} ----------------------------------------------------------
 echo " -------------------------------------------------------------------------------------------------- "  > $output
 echo "|		Práctica de Control - Sistemas Operativos - Grado en Ingeniería Informática	   |" >> $output
 echo "|                                               					       	   |"  >> $output
-echo "|		   Round Robin con particiones dinámicas ajustada al mejor y reubicable	    	   |"  >> $output
+echo "|		   SRPT, memoria según necesidades,coninua y reubicable	    	   |"  >> $output
 echo "|                                                                                                  |"  >> $output
 echo "|					    Programado por:					   |"  >> $output
-echo "|			     José Luis Garrido Labrador <jgl0062@alu.ubu.es>			   |"  >> $output
+echo "|			     Santiago Hoyos Zea <shz1001@alu.ubu.es>			   |"  >> $output
 echo "|                                                                                                  |"  >> $output
 echo "|					      Licencias:					   |"  >> $output
 echo "|				        CC-BY-SA (Documentación)				   |"  >> $output
