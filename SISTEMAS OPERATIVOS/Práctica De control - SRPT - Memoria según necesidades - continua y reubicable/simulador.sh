@@ -1,20 +1,38 @@
 #!/bin/bash
-#Author: José Luis Garrido Labrador
-#Organitation: Burgos University
-#School year: 2015/2016 - 2nd semester
-#Description: Simulation of Round Robin Algorithm and memory management
-#Licence: CC-BY-SA (Documentation), GPLv3 (Source)
 
-#Truncado de la memoria
-#Aquí se guarda la variable que determina la cantidad de memoria que aparece en cada linea, por defecto 0 (sin truncamiento)
+#	Descripción: Simulador algoritmo de planificacion de procesos SRPT, con
+# memoria según necesidades, continua y reubicable.
+
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#Buenas practicas y debug
+#set -o errexit
+#set -o nounset
+#set -o xtrace
+
+# TRUNCADO DE MEMORIA
+# Aquí se guarda la variable que determina la cantidad de memoria que aparece en
+# cada linea, por defecto 0 (sin truncamiento)
 memTruncada=$1
 if [ -z "$memTruncada" ];then
 	memTruncada=0
 fi
 
-#Variables globales de ayuda
+#CONSTANTES
 MAX=9999
 listTam=0
+
 #Colores
 coffe='\e[0;33m'
 yellow='\e[1;33m'
@@ -35,11 +53,10 @@ info="${minuscyan}|${NC}"
 output="informe$(date +%d%m%y-%H%M).txt"
 #output="informe.txt"
 
-##Funciones
+################################################ FUNCIONES ################################################
+
 #Funcion imprimeMemoria; imprime la memoria
 function imprimeMemoria {
-
-	echo "Entra a imprimeMemoria"
 
 	for (( jk=0; jk<mem_total; jk++ )) do
 
@@ -97,8 +114,6 @@ function imprimeMemoria {
 #Creación de la lista según llegada
 function Orden {
 
-	echo "Entra a Orden"
-
 	#Inicializo el vector de orden
 	for (( p=0; p<$i; p++ )) do
 		ordenDeLlegada[$p]=-1
@@ -138,8 +153,6 @@ function Orden {
 #Función validaNombre - comprueba que el nombre no tiene espacios ni se ha utilizado antes
 function validaNombre {
 
-	echo "Entra a validaNombre"
-
 	local j
 	local x=0
 
@@ -167,8 +180,6 @@ function validaNombre {
 #Función Informacion que muestra al usuario la informacion de los datos introducidos
 function imprimeInformacion {
 
-	echo "Entra a imprimeInformacion"
-
 	Orden
 	echo -e "${minuscyan} --------------------------------------------------------------- ${NC}"
 	echo -e "$info    Proceso    $info    Llegada    $info     Ráfaga    $info    Memoria    $info"
@@ -185,8 +196,6 @@ function imprimeInformacion {
 
 #Función imprimeInformacionAFichero guarda en un fichero la informacion
 function imprimeInformacionAFichero {
-
-	echo "Entra a imprimeInformacionAFichero"
 
 	echo "Los datos de los procesos son los siguientes" >> $output
 	echo " --------------------------------------------------------------- "  >> $output
@@ -205,60 +214,50 @@ function imprimeInformacionAFichero {
 #Función leeDatosDesdeFichero, lee datos de un fichero
 function leeDatosDesdeFichero {
 
-	echo "Entra a leeDatosDesdeFichero"
-
 	x=0
 	r=0
 
+	for y in $(cat InputRR.txt); do
 
-for y in $(cat InputRR.txt); do
 
-		case $x in
-		0)
-			mem_aux=$(echo $y)
-			;;
-		1)
-			quantum=$(echo $y)
-			;;
-		*)
-			nombresProcesos[$r]=$(echo $y | cut -f1 -d";")
-			tiemposDeLlegada[$r]=$(echo $y | cut -f2 -d";")
-			tiemposDeCpu[$r]=$(echo $y | cut -f3 -d";")
-			memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
+			if [[ $x -eq 0 ]]; then
 
-			if [ -z ${memoriaNecesaria[$r]} ];then
-				err "El fichero InputRR.txt está incompleto, se cargaran los datos por defecto"
-				cat default.txt > InputRR.txt
-				read -p "Pulse enter para reiniciar"
-				exec $0
+				mem_aux=$(echo $y)
+
+			else
+
+					nombresProcesos[$r]=$(echo $y | cut -f1 -d";")
+					tiemposDeLlegada[$r]=$(echo $y | cut -f2 -d";")
+					tiemposDeCpu[$r]=$(echo $y | cut -f3 -d";")
+					memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
+
+					if [ -z ${memoriaNecesaria[$r]} ];then
+						err "El fichero InputRR.txt está incompleto, se cargaran los datos por defecto"
+						cat default.txt > InputRR.txt
+						read -p "Pulse enter para reiniciar"
+						exec $0
+					fi
+
+					let r=r+1
 			fi
 
-			let r=r+1
-		esac
+			let x=x+1
 
-		let x=x+1
-	done
+		done
 
-	if [ $auto != "c" ];then
-		echo "La memoria es de $mem_aux MB"
-	fi
+		if [ $auto != "c" ];then
+			echo "La memoria es de $mem_aux MB"
+		fi
 
-	echo "La memoria es de $mem_aux MB" >> $output
+		echo "La memoria es de $mem_aux MB" >> $output
 
-	if [ $auto != "c" ];then
-		echo "El quantum es $quantum"
-	fi
-
-	echo "El quantum es $quantum" >> $output
-	proc=${#nombresProcesos[@]}
+		proc=${#nombresProcesos[@]} #<--- total de procesos
 }
 
-
-#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera acumulado de cada proceso pasada
-# su posicion como parametro $1
+#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera acumulado de cada proceso
 function aumentaTiempoAcumuladoProceso() {
 
-	echo "Entra a aumentaTiempoAcumuladoProceso"
+	#echo "Entra a aumentaTiempoAcumuladoProceso"
 
 	for (( y=0; y<$proc; y++ )) do
 
@@ -277,8 +276,6 @@ function aumentaTiempoAcumuladoProceso() {
 #Función calculaMediaValoresVector; calcula la media de valores de un vector
 function calculaMediaValoresVector() {
 
-	echo "Entra a calculaMediaValoresVector"
-
 	local array=("${!1}")
 	media=0
 	tot=0
@@ -296,7 +293,7 @@ function calculaMediaValoresVector() {
 #Función asignaMemoria; llena la memoria del proceso pasado por parámetro. $1  nombre de proceso, $2 origen $3 fin $4 identificador vectorial del proceso
 function asignaMemoria() {
 
-	echo "Entra a asignaMemoria"
+	#echo "Entra a asignaMemoria"
 
 	for (( y=$2; y<=$3; y++ )) do
 		mem[$y]=$1
@@ -309,7 +306,7 @@ function asignaMemoria() {
 #Función desasignaMemoria; libera la memoria de un determinado sitio. $1 origen $2 final
 function desasignaMemoria() {
 
-	echo "Entra a desasignaMemoria"
+	#echo "Entra a desasignaMemoria"
 
 	for (( y=$1; y <= $2; y++ )) do
 		mem[$y]=${Li}
@@ -321,8 +318,6 @@ function desasignaMemoria() {
 
 #Función PartFree; calcula las distintas particiones libres, su tamaño y su posición
 function PartFree {
-
-	echo "Entra a PartFree"
 
 	for (( y=0; y<$MAX ; y++ )) do
 		partition[$y]=0
@@ -356,9 +351,10 @@ function PartFree {
 
 
 #Función AsignaMem; asigna la memoria a los procesos
+# $1 tiempo actual.
 function AsignaMem() {
 
-	echo "Entra a AsignaMem"
+	#echo "Entra a AsignaMem"
 
 	auxiliar=0
 	reubic=1
@@ -376,10 +372,10 @@ function AsignaMem() {
 					if [ $cola -eq $zed ]  2> /dev/null ;then
 
 						if [ $auto != "c" ];then
-							echo "El proceso ${nombresProcesos[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante"
+							echo "El proceso ${nombresProcesos[$zed]} necesita más memoria de la disponible actualmente, se ejecutará más adelante"
 						fi
 
-						echo "El proceso ${nombresProcesos[$zed]} necesita mas memoria de la disponible actualmente, se ejecutará más adelante" >> $output
+						echo "El proceso ${nombresProcesos[$zed]} necesita más memoria de la disponible actualmente, se ejecutará más adelante" >> $output
 						#Bloqueamos la cola
 						cola=$zed
 						salida=1
@@ -444,7 +440,7 @@ function AsignaMem() {
 #Funcion reubicar; reubica la memoria desplazandola hacia la izquierda todos los programas
 function reubicar {
 
-	echo "Entra a reubicar"
+	#echo "Entra a reubicar"
 
 	before=0
 	local aux
@@ -484,11 +480,9 @@ function reubicar {
 }
 
 
-#Función SiNo; comprueba si se ha medito un si o un no
+#Función validaSiNo; comprueba si se ha medito un si o un no
 #return 1 si se ha introducido s, S, n, N de lo contrario devuelve 0.
-function SiNo(){
-
-	echo "Entra a SiNo"
+function validaSiNo(){
 
 	local j=0
 
@@ -502,8 +496,6 @@ function SiNo(){
 
 #Función lista: pone los procesos que esperan para ejecutarse en cola
 function lista {
-
-	echo "Entra a lista"
 
 	local cont
 	local aux
@@ -539,8 +531,6 @@ function lista {
 
 #Función Estado: dice para el tiempo acual los datos actuales de los procesos
 function Estado {
-
-	echo "Entra a Estado"
 
 	local restante
 	local memIni
@@ -600,8 +590,6 @@ function Estado {
 #Función err, redirecciona el mensaje a stderr
 function err {
 
-	echo "Entra a err"
-
 	echo -e "${red}Error: $1${NC}" >> /dev/stderr
 	echo >> /dev/stderr
 }
@@ -638,7 +626,7 @@ echo " -------------------------------------------------------------------------
 
 #Recogida de datos
 read -p "Meter lo datos de manera manual? [s,n] " manu
-SiNo $manu
+validaSiNo $manu
 
 while [ $? -eq 0 ];do
 	err "Valor incorrecto"
@@ -662,22 +650,6 @@ if [ $manu = "s" -o $manu = "S" ];then
 	done
 
 	echo "$mem_aux" > InputRR.txt
-
-																														#################################################3ESTO VA FUERA SANTI
-	j=0
-	while [ $j -eq 0 ] 2> /dev/null ;do
-		read -p "Introduzca el quantum: " quantum
-
-		if [ \( $quantum -gt 0 \) -a \( $? -eq 0 \) ] 2> /dev/null;then
-			j=1
-		else
-			err "Dato incorrecto"
-		fi
-
-	done
-
-	echo "El quantum escogido es $quantum" >> $output
-	echo "$quantum" >> InputRR.txt
 
 else
 
@@ -803,7 +775,7 @@ if [ $manu = "S" ] 2>/dev/null || [ $manu = "s" ] 2>/dev/null;then
 				p="s"
 				j=1
 			else
-				SiNo $p
+				validaSiNo $p
 
 				if [ $? -eq 1 ];then
 					j=1
@@ -845,12 +817,13 @@ fi
 #Declaro las ultimas variables
 declare mem[$mem_aux] #Memoria de tamaño 1 MB por palabra
 
+#Inicializo la memoria a libre
 for (( y=0; y<$mem_aux; y++ )) do
-	mem[$y]=${Li} #Inicializo la memoria a libre
+	mem[$y]=${Li}
 done
 
-declare proc_waitA[$proc] #Tiempo de espera acumulado
-declare proc_waitR[$proc] #Tiempo de espera real
+declare proc_waitA[$proc] 				#Tiempo de espera acumulado
+declare proc_waitR[$proc] 				#Tiempo de espera real
 declare memoriaNecesariaI[$proc]  #Palabra inicial
 declare memoriaNecesariaF[$proc]  #Palabra final
 
@@ -858,7 +831,7 @@ for (( y=0; y<$proc; y++ )) do
 	memoriaNecesariaI[$y]="-1"
 done
 
-declare partition[$MAX]	  	#Tamaño de las distintas particiones libres
+declare partition[$MAX]	  					#Tamaño de las distintas particiones libres
 declare tiemposDeLlegada_aux[$proc] #Momento en el que el proceso puede ocupar memoria
 
 for (( y=0; y<$proc; y++ )) do
@@ -896,43 +869,76 @@ end=0 #Cantidad de procesos finalizados
 total=0 #Procesos introducidos a la memoria
 cola=${ordenDeLlegada[0]}
 
-#Comienza el agoritmo a funcionar
-while [ $e -eq 0 ];do
+#bandera booleana, indica si ha entrado un proceso nuevo durante la ejecución
+#del planificador. se usará para lanzar la comprobación de SRPT.
+entraProcesoNuevo=0
 
-	clear
+function comprobarTiempos {
+
+	local minimo=$1
+
+	for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+
+			if [[ ${tiemposDeCpu[$i]} < minimo ]]; then
+				minimo=${tiemposDeCpu[$i]}
+				position=$i
+			fi
+
+	done
+
+}
+
+
+################################################################################
+#########################<< BUClE DE PLANIFICACIÓN >>###########################
+################################################################################
+
+z=0
+finProcesado=0
+minimo=${tiemposDeCpu[0]}
+siguiente=$z
+while [[ $finProcesado -ne 1 ]]; do
+
+clear
+	echo "minimo:"$minimo" siguiente:"$siguiente" z:"$z
+
+	for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+
+		 if  [ ${tiemposDeLlegada[$i]} -le ${clock} ] && [ ${tiemposDeCpu[$i]} -lt ${minimo} ] && [ ${tiemposDeCpu[$i]} -ne 0 ]; then
+			 minimo=${tiemposDeCpu[$i]}
+			 siguiente=$i
+		 fi
+
+	done
+	echo "Proceso que deberia ejecutarse " $siguiente
+
+	if [[ $siguiente -eq $z ]]; then
+		let minimo--
+	fi
+
 
 	if [ $auto != "c" ];then
 		echo -e "${green}Unidad de tiempo actual $clock${NC}"
 	fi
-
 	echo "" >> $output
 	echo "Unidad de tiempo actual $clock" >> $output
+
+	#Intentamos cargar en memoria los procesos.
 	AsignaMem $clock
-	z=${list[0]}
 
-	if [ $quantum_aux -eq $quantum ] && [ $listTam -ne 0 ];then #Cambio de contexto
+	#pasamos un ciclo
+	if [[ $listTam -ne 0 ]]; then
 
-		clock_time=$clock
-
-		if [ $auto != "c" ];then
-			echo -e "${blue}El proceso ${nombresProcesos[$z]} entra ahora en el procesador${NC}"
-		fi
-
-		echo "El proceso ${nombresProcesos[$z]} entra ahora en el procesador" >> $output
+			let clock++
+			let tiemposDeCpu[$z]=tiemposDeCpu[$z]-1
+			aumentaTiempoAcumuladoProceso 0
+			exe=1
 	fi
 
-	if [ $quantum_aux -gt 0 ] && [ $listTam -ne 0 ];then #Pasa un ciclo
-		let clock++
-		let quantum_aux=quantum_aux-1
-		let tiemposDeCpu[$z]=tiemposDeCpu[$z]-1
-		aumentaTiempoAcumuladoProceso 0
-		exe=1
-	fi
-
-	if [ "${tiemposDeCpu[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then #El proceso termina en este tiempo
+	#El proceso termina en este tiempo ?????
+	if [ "${tiemposDeCpu[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then
 		let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumento antes por lo que vamos hacia atras)
 		let proc_retR[$z]=proc_ret[$z]-tiemposDeLlegada[$z]
-		quantum_aux=0
 		fin=1
 		mot=1
 		let end++
@@ -944,33 +950,23 @@ while [ $e -eq 0 ];do
 		echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga" >> $output
 	fi
 
-	if [ $quantum_aux -eq 0 ] && [ $listTam -ne 0 ];then #Fin del uso de quantum del proceso
+	echo "|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|" >> $output
+	lista
 
-		if [ $mot -eq 0 ];then
 
-			if [ $auto != "c" ];then
-				echo "El proceso ${nombresProcesos[$z]} agota su quantum en este tiempo, ráfagas restantes: ${tiemposDeCpu[$z]}"
-			fi
-
-			echo "El proceso ${nombresProcesos[$z]} agota su quantum en este tiempo, ráfagas restantes ${tiemposDeCpu[$z]}" >> $output
-
-		else
-			mot=0
-		fi
-
-		if [ $auto != "c" ];then
-			echo -e "${cyan_back}|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|${NC}"
-		fi
-		echo "|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|" >> $output
-		quantum_aux=$quantum
-		lista
-	fi
-
-	#Si el proceso se ha terminado
 	if [ $fin -eq 1 ];then
-    	let mem_aux=mem_aux+memoriaNecesaria[$z]
-    	desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]}
-    	memoriaNecesariaI[$z]="-2"
+		let mem_aux=mem_aux+memoriaNecesaria[$z]
+		desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]}
+		memoriaNecesariaI[$z]="-2"
+
+		if [[ $minimo -le 0 ]]; then
+			for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+				if [[ ${tiemposDeCpu[$i]} -gt 0 ]]; then
+					minimo=${tiemposDeCpu[$i]}
+					siguiente=$i
+				fi
+			done
+		fi
 
 		if [ $auto != "c" ];then
 			echo -e "${blue}El proceso ${nombresProcesos[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada${NC}"
@@ -984,27 +980,28 @@ while [ $e -eq 0 ];do
 	imprimeMemoria
 	Estado
 
+	#Esperar enter o no
 	if [ $auto = "a" ];then
 
 		if [ $exe -eq 1 -a $end -ne $proc ];then
 			echo ""
 			read -p "Pulse intro para continuar"
 		fi
-
 	elif [ $auto = "b" ];then
 		sleep 5
 	fi
 
-	if [ $listTam -eq 0 ] && [ $total -eq $proc ];then #Si todos los procesos fueron introducidos y ya se han ejecutado
-			e=1
-	elif [ $listTam -eq 0 ] && [ $exe -eq 0 ];then
-		let clock++
-		aumentaTiempoAcumuladoProceso 1
-	else
-		exe=0
+	#Si el tiempo actual es 0 y elsigueinte es el mismo proceso, queire decir
+	#que no hay ningun proceso con con necesidad de cpu > 0 y hemos acabado.
+	if [ ${tiemposDeCpu[$z]} -le 0 ] && [ $siguiente -eq $z ] ;then
+		finProcesado=1
 	fi
 
+	z=$siguiente
+
 done
+
+######################## IMPRESION DE RESULTADOS ###############################
 
 #Damos valor a proc_waitR
 for (( y=0; y<$proc; y++ )) do
@@ -1019,7 +1016,6 @@ if [ $auto != "c" ];then
 	read -p "Pulsa cualquier tecla para ver resumen."
 fi
 
-#Imprimimos los resultados
 clear
 
 if [ $auto != "c" ];then
