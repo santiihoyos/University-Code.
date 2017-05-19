@@ -250,13 +250,9 @@ listTam=0
 
 		for (( y=0; y<$proc; y++ )) do
 
-			if [ "${tiemposDeCpu[$y]}" -ne 0 ];then
-
-				if [ $y -ne $z -o $1 -eq 1 ];then
+				if [ "${tiemposDeCpu[$y]}" -ne 0 ] && ( [ "$y" -ne "$z" ] || [ "$1" -eq 1 ] );then
 					let proc_waitA[$y]=proc_waitA[$y]+1
 				fi
-
-			fi
 
 		done
 	}
