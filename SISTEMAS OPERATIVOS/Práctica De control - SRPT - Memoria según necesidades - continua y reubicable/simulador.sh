@@ -49,7 +49,7 @@ listTam=0
 	output="informe$(date +%d%m%y-%H%M).txt"
 }
 
-############################# FUNCIONES ########################################
+	########################### FUNCIONES ########################################
 {
 	#Funcion imprimeMemoria; imprime la memoria
 	function imprimeMemoria {
@@ -568,7 +568,7 @@ listTam=0
 	}
 }
 
-##################### SCRIPT PROGRAMA PRINCIPAL#################################
+	########################### CABECERA ########################################
 {
 	clear
 	echo -e "${minuscyan} -------------------------------------------------------------------------------------------------- ${NC}"
@@ -595,6 +595,7 @@ listTam=0
 	echo "|				        CC-BY-SA (Documentación)				   |"  >> $output
 	echo "|					    GPLv3 (Código)					   |"  >> $output
 	echo " -------------------------------------------------------------------------------------------------- "  >> $output
+}
 
 	######################### PRE-PLANIFICADOR ###################################
 {
@@ -877,7 +878,7 @@ listTam=0
 			let minimo--
 		fi
 
-
+		#imprime el tiempo actual, tanto en salida estandar como en fichero
 		if [ $auto != "c" ];then
 			echo -e "${green}Unidad de tiempo actual $clock${NC}"
 		fi
@@ -898,7 +899,7 @@ listTam=0
 
 		#El proceso termina en este tiempo ?????
 		if [ "${tiemposDeCpu[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then
-			let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumento antes por lo que vamos hacia atras)
+			let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumentó antes, por tanto -1)
 			let proc_retR[$z]=proc_ret[$z]-tiemposDeLlegada[$z]
 			fin=1
 			mot=1
@@ -907,12 +908,12 @@ listTam=0
 			if [ $auto != "c" ];then
 				echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga"
 			fi
-
 			echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga" >> $output
+
 		fi
 
 		echo "|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|" >> $output
-		lista
+		#lista
 
 
 		if [ $fin -eq 1 ];then
@@ -1022,5 +1023,4 @@ listTam=0
 	echo "Los tiempos medio se calculan con los valores reales" >> $output
 	echo "Tiempo de espera medio: $media_wait" >> $output
 	echo "Tiempo de retorno medio: $media_ret" >> $output
-}
 }
