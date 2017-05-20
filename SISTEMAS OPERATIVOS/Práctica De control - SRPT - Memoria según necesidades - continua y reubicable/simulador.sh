@@ -288,8 +288,6 @@ listTam=0
 	#Función desasignaMemoria; libera la memoria de un determinado sitio. $1 origen $2 final $3 id proceso
 	function desasignaMemoria {
 
-		procesosEnMemoria[$3]=0
-
 		for (( y="$1"; y <= $2; y++ )) do
 			mem[$y]=${Li}
 			mem_dir[$y]=-1
@@ -397,6 +395,8 @@ listTam=0
 						let mem_aux=mem_aux-memoriaNecesaria[$zed]
 						let next=alpha+1
 						cola=${ordenDeLlegada[$next]}
+
+						procesosEnMemoria[$zed]=1
 
 						if [ $auto != "c" ];then
 							echo -e "${yellow}El proceso ${nombresProcesos[$zed]} ha entrado en memoria${NC}"
@@ -876,15 +876,19 @@ listTam=0
 		#Búsqueda de un proceso que tenga el menor tiempo restante necesario
 		#de Cpu, es decir al que le falte menos para acabar, ha de haber llegado ya
 		#ser el mas pequeño, mayor que 0 y estar en memoria.
-		for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+		for (( g = 0; g < ${#tiemposDeCpu[@]}; g++ )); do
 
-			 if [ ${procesosEnMemoria[$i]} -eq 1 ] && [ ${tiemposDeLlegada[$i]} -le ${clock} ] && [ ${tiemposDeCpu[$i]} -lt ${minimo} ] && [ ${tiemposDeCpu[$i]} -ne 0 ]; then
-				 minimo=${tiemposDeCpu[$i]}
+			echo "candidato:" $g " nombre=" ${nombresProcesos[$g]} "en memoria= " ${procesosEnMemoria[$g]}
+			 if [ ${procesosEnMemoria[$g]} -eq 1 ] && [ ${tiemposDeLlegada[$g]} -le ${clock} ] && [ ${tiemposDeCpu[$g]} -lt ${minimo} ] && [ ${tiemposDeCpu[$g]} -ne 0 ]; then
+				 minimo=${tiemposDeCpu[$g]}
 				 anterior=$z
-				 z=$i
+				 z=$g
+				 echo "entra" $g " antes" $anterior
 			 fi
 
 		done
+
+		echo "se va a ejecutar= " ${nombresProcesos[$z]}
 
 		#pasamos un ciclo
 		let clock++
@@ -895,6 +899,7 @@ listTam=0
 		#El proceso termina en este tiempo?
 		if [ "${tiemposDeCpu[$z]}" -eq 0 ];then
 
+			procesosEnMemoria[$z]=0
 			let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumentó antes, por tanto -1)
 			let proc_retR[$z]=proc_ret[$z]-tiemposDeLlegada[$z]
 			fin=0
@@ -920,7 +925,7 @@ listTam=0
 			auxiliar=1
 		fi
 
-		lista
+		#lista
 		imprimeMemoria
 		Estado
 
