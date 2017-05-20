@@ -290,7 +290,7 @@ listTam=0
 
 		#echo "Entra a desasignaMemoria"
 
-		for (( y=$1; y <= $2; y++ )) do
+		for (( y="$1"; y <= "$2"; y++ )) do
 			mem[$y]=${Li}
 			mem_dir[$y]=-1
 		done
@@ -332,9 +332,7 @@ listTam=0
 
 	#Función AsignaMem; asigna la memoria a los procesos
 	# $1 tiempo actual.
-	function AsignaMem() {
-
-		#echo "Entra a AsignaMem"
+	function AsignaMem {
 
 		auxiliar=0
 		reubic=1
@@ -460,7 +458,7 @@ listTam=0
 
 	#Función validaSiNo; comprueba si se ha medito un si o un no
 	#return 1 si se ha introducido s, S, n, N de lo contrario devuelve 0.
-	function validaSiNo(){
+	function validaSiNo {
 
 		local j=0
 
@@ -598,6 +596,8 @@ listTam=0
 	echo "|					    GPLv3 (Código)					   |"  >> $output
 	echo " -------------------------------------------------------------------------------------------------- "  >> $output
 
+	######################### PRE-PLANIFICADOR ###################################
+{
 	#Recogida de datos
 	read -p "Meter lo datos de manera manual? [s,n] " manu
 	validaSiNo $manu
@@ -835,7 +835,6 @@ listTam=0
 	e=0 #e=0 aun no ha terminado, e=1 ya se terminó
 	j=0
 	exe=0	#Ejecuciones que ha habido en una vuelta de lista
-	quantum_aux=$quantum #Quantum del que se dispone
 	position=0 #Posición del porceso que se debe ejecutar ahora
 	fin=0
 	mot=0
@@ -843,30 +842,10 @@ listTam=0
 	total=0 #Procesos introducidos a la memoria
 	cola=${ordenDeLlegada[0]}
 
-	#bandera booleana, indica si ha entrado un proceso nuevo durante la ejecución
-	#del planificador. se usará para lanzar la comprobación de SRPT.
-	entraProcesoNuevo=0
+}
 
-	function comprobarTiempos {
-
-		local minimo=$1
-
-		for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
-
-				if [[ ${tiemposDeCpu[$i]} < minimo ]]; then
-					minimo=${tiemposDeCpu[$i]}
-					position=$i
-				fi
-
-		done
-
-	}
-
-
-	################################################################################
-	#########################<< BUClE DE PLANIFICACIÓN >>###########################
-	################################################################################
-
+	########################## PLANIFICADOR ######################################
+{
 	z=0
 	finProcesado=0
 	minimo=${tiemposDeCpu[0]}
@@ -875,6 +854,14 @@ listTam=0
 
 		clear
 
+		echo "No ejecutables"
+		for (( i = 0; i < ${#cola[@]}; i++ )); do
+		 	echo "Proceso: " ${cola[$i]}
+		 done
+
+		#Búsqueda de un proceso que tenga el menor tiempo restante necesario
+		#de Cpu, es decir al que le falte menos para acabar, ha de haber llegado ya
+		#y ser el mas pequeño mayor que 0.
 		for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
 
 			 if  [ ${tiemposDeLlegada[$i]} -le ${clock} ] && [ ${tiemposDeCpu[$i]} -lt ${minimo} ] && [ ${tiemposDeCpu[$i]} -ne 0 ]; then
@@ -884,6 +871,8 @@ listTam=0
 
 		done
 
+		#si el siguiente proceso es el mismo que el anterior entonces el tiempo
+		#de cpu se reducira en 1  por tanto el minimo actual también. (porque es el)
 		if [[ $siguiente -eq $z ]]; then
 			let minimo--
 		fi
@@ -972,9 +961,10 @@ listTam=0
 		z=$siguiente
 
 	done
+}
 
-	######################## IMPRESION DE RESULTADOS ###############################
-
+	######################### POST-PLANIFICADOR ##################################
+{
 	#Damos valor a proc_waitR
 	for (( y=0; y<$proc; y++ )) do
 
@@ -1032,4 +1022,5 @@ listTam=0
 	echo "Los tiempos medio se calculan con los valores reales" >> $output
 	echo "Tiempo de espera medio: $media_wait" >> $output
 	echo "Tiempo de retorno medio: $media_ret" >> $output
+}
 }
