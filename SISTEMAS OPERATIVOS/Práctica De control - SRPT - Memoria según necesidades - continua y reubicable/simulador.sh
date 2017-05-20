@@ -276,7 +276,7 @@ listTam=0
 	#Función asignaMemoria; llena la memoria del proceso pasado por parámetro. $1  nombre de proceso, $2 origen $3 fin $4 identificador vectorial del proceso
 	function asignaMemoria {
 
-		#echo "Entra a asignaMemoria"
+		procesosEnMemoria[$4]=1
 
 		for (( y=$2; y<=$3; y++ )) do
 			mem[$y]=$1
@@ -285,12 +285,12 @@ listTam=0
 
 	}
 
-	#Función desasignaMemoria; libera la memoria de un determinado sitio. $1 origen $2 final
+	#Función desasignaMemoria; libera la memoria de un determinado sitio. $1 origen $2 final $3 id proceso
 	function desasignaMemoria {
 
-		#echo "Entra a desasignaMemoria"
+		procesosEnMemoria[$3]=0
 
-		for (( y="$1"; y <= "$2"; y++ )) do
+		for (( y="$1"; y <= $2; y++ )) do
 			mem[$y]=${Li}
 			mem_dir[$y]=-1
 		done
@@ -432,7 +432,7 @@ listTam=0
 			elif [ $before -eq 1 -a ${mem_dir[$w]} -ne -1 ];then
 					aux=${mem_dir[$w]}
 					aux2=1
-					desasignaMemoria ${memoriaNecesariaI[$aux]} ${memoriaNecesariaF[$aux]}
+					desasignaMemoria ${memoriaNecesariaI[$aux]} ${memoriaNecesariaF[$aux]} $aux
 					memoriaNecesariaI[$aux]=$aux_init
 					let memoriaNecesariaF[$aux]=memoriaNecesariaI[$aux]+memoriaNecesaria[$aux]
 					let memoriaNecesariaF[$aux]=memoriaNecesariaF[$aux]-1
@@ -662,6 +662,7 @@ listTam=0
 	memoriaNecesaria={}		#Memoria que necesita cada proceso
 	ordenDeLlegada={}	#Orden de llegada
 	procesosNoEjecutables={}	#Procesos que no pueden ejecutarse porque no tienen memoria (1 = parado, 0 no parado)
+	procesosEnMemoria={}
 
 	clear
 
@@ -843,6 +844,11 @@ listTam=0
 	total=0 #Procesos introducidos a la memoria
 	cola=${ordenDeLlegada[0]}
 
+
+	for (( m = 0; m < ${#nombresProcesos[@]}; m++ )); do
+		procesosEnMemoria[$m]=0
+	done
+
 }
 
 	########################## PLANIFICADOR ######################################
@@ -851,32 +857,14 @@ listTam=0
 	finProcesado=0
 	minimo=${tiemposDeCpu[0]}
 	siguiente=$z
+	anterior=0
 	while [[ $finProcesado -ne 1 ]]; do
 
 		clear
 
-		echo "No ejecutables"
-		for (( i = 0; i < ${#cola[@]}; i++ )); do
-		 	echo "Proceso: " ${cola[$i]}
-		 done
-
-		#Búsqueda de un proceso que tenga el menor tiempo restante necesario
-		#de Cpu, es decir al que le falte menos para acabar, ha de haber llegado ya
-		#y ser el mas pequeño mayor que 0.
-		for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
-
-			 if  [ ${tiemposDeLlegada[$i]} -le ${clock} ] && [ ${tiemposDeCpu[$i]} -lt ${minimo} ] && [ ${tiemposDeCpu[$i]} -ne 0 ]; then
-				 minimo=${tiemposDeCpu[$i]}
-				 siguiente=$i
-			 fi
-
-		done
-
-		#si el siguiente proceso es el mismo que el anterior entonces el tiempo
-		#de cpu se reducira en 1  por tanto el minimo actual también. (porque es el)
-		if [[ $siguiente -eq $z ]]; then
-			let minimo--
-		fi
+		#Intentamos cargar en memoria los procesos.
+		AsignaMem ${clock}
+		echo ${procesosEnMemoria[0]} ${procesosEnMemoria[1]} ${procesosEnMemoria[2]} ${procesosEnMemoria[3]}
 
 		#imprime el tiempo actual, tanto en salida estandar como en fichero
 		if [ $auto != "c" ];then
@@ -885,60 +873,54 @@ listTam=0
 		echo "" >> $output
 		echo "Unidad de tiempo actual $clock" >> $output
 
-		#Intentamos cargar en memoria los procesos.
-		AsignaMem $clock
+		#Búsqueda de un proceso que tenga el menor tiempo restante necesario
+		#de Cpu, es decir al que le falte menos para acabar, ha de haber llegado ya
+		#ser el mas pequeño, mayor que 0 y estar en memoria.
+		for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+
+			 if [ ${procesosEnMemoria[$i]} -eq 1 ] && [ ${tiemposDeLlegada[$i]} -le ${clock} ] && [ ${tiemposDeCpu[$i]} -lt ${minimo} ] && [ ${tiemposDeCpu[$i]} -ne 0 ]; then
+				 minimo=${tiemposDeCpu[$i]}
+				 anterior=$z
+				 z=$i
+			 fi
+
+		done
 
 		#pasamos un ciclo
-		if [[ $listTam -ne 0 ]]; then
+		let clock++
+		let tiemposDeCpu[$z]=tiemposDeCpu[$z]-1
+		aumentaTiempoAcumuladoProceso 0
+		exe=1
 
-				let clock++
-				let tiemposDeCpu[$z]=tiemposDeCpu[$z]-1
-				aumentaTiempoAcumuladoProceso 0
-				exe=1
-		fi
+		#El proceso termina en este tiempo?
+		if [ "${tiemposDeCpu[$z]}" -eq 0 ];then
 
-		#El proceso termina en este tiempo ?????
-		if [ "${tiemposDeCpu[$z]}" -eq 0 ] && [ $listTam -ne 0 ];then
 			let proc_ret[$z]=$clock-1	#El momento de retorno será igual al momento de salida en el reloj (este aumentó antes, por tanto -1)
 			let proc_retR[$z]=proc_ret[$z]-tiemposDeLlegada[$z]
-			fin=1
+			fin=0
 			mot=1
 			let end++
 
-			if [ $auto != "c" ];then
-				echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga"
-			fi
-			echo "El proceso ${nombresProcesos[$z]} termina en esta ráfaga" >> $output
-
-		fi
-
-		echo "|${nombresProcesos[$z]}($clock_time,${tiemposDeCpu[$z]})|" >> $output
-		#lista
-
-
-		if [ $fin -eq 1 ];then
 			let mem_aux=mem_aux+memoriaNecesaria[$z]
-			desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]}
+			echo "desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]}"
+			desasignaMemoria ${memoriaNecesariaI[$z]} ${memoriaNecesariaF[$z]} $z
 			memoriaNecesariaI[$z]="-2"
-
-			if [[ $minimo -le 0 ]]; then
-				for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
-					if [[ ${tiemposDeCpu[$i]} -gt 0 ]]; then
-						minimo=${tiemposDeCpu[$i]}
-						siguiente=$i
-					fi
-				done
-			fi
 
 			if [ $auto != "c" ];then
 				echo -e "${blue}El proceso ${nombresProcesos[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada${NC}"
 			fi
 
-			echo "El proceso ${nombresProcesos[$z]} retorna al final de la ráfaga ${proc_ret[$z]}, la memoria asignada fue liberada" >> $output
+			for (( i = 0; i < ${#tiemposDeCpu[@]}; i++ )); do
+				if [[ ${tiemposDeCpu[$i]} -gt 0 ]]; then
+					minimo=${tiemposDeCpu[$i]}
+					z=$i
+				fi
+			done
+
 			auxiliar=1
-			fin=0
 		fi
 
+		lista
 		imprimeMemoria
 		Estado
 
@@ -953,13 +935,9 @@ listTam=0
 			sleep 5
 		fi
 
-		#Si el tiempo actual es 0 y elsigueinte es el mismo proceso, queire decir
-		#que no hay ningun proceso con con necesidad de cpu > 0 y hemos acabado.
-		if [ ${tiemposDeCpu[$z]} -le 0 ] && [ $siguiente -eq $z ] ;then
+		if [ ${tiemposDeCpu[$z]} -le 0 ] && [ $anterior -eq $z ] ;then
 			finProcesado=1
 		fi
-
-		z=$siguiente
 
 	done
 }
