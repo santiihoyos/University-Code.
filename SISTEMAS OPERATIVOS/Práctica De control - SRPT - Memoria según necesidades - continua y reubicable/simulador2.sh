@@ -298,23 +298,6 @@ function imprimeInformacion() {
   echo " --------------------------------------------------------------- " >>$output
 }
 
-#Función calculaMediaValoresVector; calcula la media de valores de un vector
-function calculaMediaValoresVector() {
-
-  local array=(${!1})
-  media=0
-  tot=0
-
-  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
-    echo "error aqui"
-    media=$(expr $media + ${array[$y]})
-    let tot=tot+1
-  done
-
-  media=$(expr $media /* $tot)
-  return $media
-}
-
 #Función leeDatosDesdeFichero, lee datos de un fichero
 function leeDatosDesdeFichero() {
 
@@ -553,9 +536,7 @@ function aumentaTiempoAcumuladoProcesos() {
 recogeDatos
 
 declare proc_waitA[${#nombresProcesos[@]}] #Tiempo de espera acumulado
-declare proc_waitR[${#nombresProcesos[@]}] #Tiempo de espera rea
 declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
-declare proc_retR[${#nombresProcesos[@]}]  #Tiempo que ha estado el proceso desde entró hasta que terminó
 finDeLaPlanificacion=0
 procesoActual=0
 procesoAnterior=-1
@@ -572,6 +553,7 @@ for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
   proc_waitA[$i]=0
 done
 
+#Bucle de planificación
 while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
   clear
@@ -672,7 +654,7 @@ done
   fi
   echo "Resumen final" >>$output
   echo " --------------------------------------------------------------------------------------- " >>$output
-  echo "|    Proceso    |        Tiempo Espera Acu    |  Retorno Real |" >>$output
+  echo "|    Proceso    |        Tiempo Espera Acu    |  Tiempo retorno |" >>$output
 
   for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
 
