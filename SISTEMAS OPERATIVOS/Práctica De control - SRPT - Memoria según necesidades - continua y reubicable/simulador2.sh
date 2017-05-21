@@ -1,5 +1,19 @@
 #!/bin/bash
 
+#LICENCIA
+#	Descripción: Simulador algoritmo de planificacion de procesos SRPT, con
+# memoria según necesidades, continua y reubicable.
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #arrays para controlar los procesos
 nombresProcesos={}
 tiemposDeLlegada={}
@@ -270,6 +284,35 @@ function imprimeInformacion() {
   done
 
   echo -e " ${minuscyan}---------------------------------------------------------------${NC} "
+
+  echo "Los datos de los procesos son los siguientes" >>$output
+  echo " --------------------------------------------------------------- " >>$output
+  echo "|    Proceso    |    Llegada    |     Ráfaga    |    Memoria    |" >>$output
+
+  for ((y = 0; y < $proc; y++)); do
+    l=${ordenDeLlegada[$y]}
+    echo " --------------------------------------------------------------- " >>$output
+    echo "|	${nombresProcesos[$l]}	|	${tiemposDeLlegada[$l]}	|	${tiemposDeCpu[$l]}	|	${memoriaNecesaria[$l]}	|" >>$output
+  done
+
+  echo " --------------------------------------------------------------- " >>$output
+}
+
+#Función calculaMediaValoresVector; calcula la media de valores de un vector
+function calculaMediaValoresVector() {
+
+  local array=(${!1})
+  media=0
+  tot=0
+
+  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
+    echo "error aqui"
+    media=$(expr $media + ${array[$y]})
+    let tot=tot+1
+  done
+
+  media=$(expr $media /* $tot)
+  return $media
 }
 
 #Función leeDatosDesdeFichero, lee datos de un fichero
@@ -462,6 +505,19 @@ function Estado() {
   echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
 }
 
+#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a lso proceos
+#que ya han llegado y que no hayan acabado y no este en cpu
+function aumentaTiempoAcumuladoProcesos() {
+
+  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
+
+    if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -lt $reloj ] && [ $1 -ne $y ]; then
+      proc_waitA[$y]=$(expr ${proc_waitA[$y]} + 1)
+    fi
+
+  done
+}
+
 ###################### INICIO DEL SCRIPT #################
 
 #Impresión de cabeceras
@@ -496,6 +552,10 @@ function Estado() {
 
 recogeDatos
 
+declare proc_waitA[${#nombresProcesos[@]}] #Tiempo de espera acumulado
+declare proc_waitR[${#nombresProcesos[@]}] #Tiempo de espera rea
+declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
+declare proc_retR[${#nombresProcesos[@]}]  #Tiempo que ha estado el proceso desde entró hasta que terminó
 finDeLaPlanificacion=0
 procesoActual=0
 procesoAnterior=-1
@@ -506,6 +566,10 @@ clear
 #Marcado del array de memoria como Li
 for ((b = 0; b < $totalMemoria; b++)); do
   memoria[$b]=${Li}
+done
+
+for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
+  proc_waitA[$i]=0
 done
 
 while [[ $finDeLaPlanificacion -eq 0 ]]; do
@@ -532,6 +596,8 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
   done
 
+  aumentaTiempoAcumuladoProcesos $procesoActual
+
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
     echo "El proceso" ${nombresProcesos[$procesoActual]} "ha entrado en CPU."
@@ -545,6 +611,9 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
   #El proceso actual acaba en este tiempo
   if [[ ${tiemposDeCpu[$procesoActual]} -le 0 ]]; then
+
+    #Tiempo de retorno del proceso: momento actual - momento de llegada
+    proc_ret[$procesoActual]=$(expr $reloj - ${tiemposDeLlegada[$procesoActual]})
 
     if [ $auto != "c" ]; then
       echo -e "${blue}El proceso ${nombresProcesos[$procesoActual]} retorna al final del tiempo ${reloj}, la memoria asignada fue liberada${NC}"
@@ -585,3 +654,41 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   fi
 
 done
+
+#Post planificación
+{
+
+  if [ $auto != "c" ]; then
+    read -p "Pulsa cualquier tecla para ver resumen..."
+  fi
+
+  clear
+
+  echo -e "${green}En la sigueinte tabla se ve para cada proceso el tiempo que ha pasado esperando en la cola de listos.\nademás del tiempo que ha tardado en retornar una respuesta.${NC}"
+
+  if [ $auto != "c" ]; then
+    echo -e " ${minuscyan}----------------------------------------------------------------${NC} "
+    echo -e "$info    Proceso    $info         Tiempo Espera Acu     $info Tiempo retorno $info"
+  fi
+  echo "Resumen final" >>$output
+  echo " --------------------------------------------------------------------------------------- " >>$output
+  echo "|    Proceso    |        Tiempo Espera Acu    |  Retorno Real |" >>$output
+
+  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
+
+    if [ $auto != "c" ]; then
+      echo -e " ${minuscyan}-----------------------------------------------------------------${NC} "
+      echo -e "$info	${nombresProcesos[$y]}	$info		${proc_waitA[$y]}		$info	${proc_ret[$y]}\t $info"
+    fi
+
+    echo " -----------------------------------------------------------------" >>$output
+    echo "|	${nombresProcesos[$y]}	|		${proc_waitA[$y]}		|	${proc_ret[$y]}	 |" >>$output
+
+  done
+
+  if [ $auto != "c" ]; then
+    echo -e " ${minuscyan}-----------------------------------------------------------------${NC} "
+  fi
+  echo " ----------------------------------------------------------------- " >>$output
+
+}
