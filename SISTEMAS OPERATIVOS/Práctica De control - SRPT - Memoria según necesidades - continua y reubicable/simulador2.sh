@@ -24,8 +24,6 @@ memoria={}
 totalMemoria=0
 totalMemoriaOcupada=0
 procesosEnMemoria={}
-posicionesInicioMemoria={}
-posicionesFinMemoria={}
 memoriaNecesaria={}
 
 #variables del sistema
@@ -36,18 +34,11 @@ auto=0 #indica si la ejecucion se hace sin intervención humana obcion b y c
 #Variables Colores
 {
   coffe='\e[0;33m'
-  yellow='\e[1;33m'
   green='\e[1;32m'
-  purple='\e[1;35m'
   red='\e[1;31m'
-  minusred='\e[0;31m'
   cyan='\e[1;36m'
   minuscyan='\e[0;36m'
-  cyan_back='\e[1;44m'
-  black='\e[1;30m'
   blue='\e[1;34m'
-  white='\e[0;39m'
-  inverted='\e[7m'
   NC='\e[0m' # No Color
   Li="${cyan}Li${NC}"
   info="${minuscyan}|${NC}"
@@ -332,14 +323,8 @@ function leeDatosDesdeFichero() {
   done
 }
 
-function inicializaArrarys() {
-
-  for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
-    procesosEnMemoria[$i]=0 #todos lo procesos empiezan fuera de memoria
-  done
-
-}
-
+#Esta funcion funciona a modo de recolector de basura, se llama cuando se queira
+#liberar memoria del sistema. Java Like ;)
 function recolectaBasura() {
 
   for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
@@ -494,7 +479,7 @@ function aumentaTiempoAcumuladoProcesos() {
 
   for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
 
-    if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -lt $reloj ] && [ $1 -ne $y ]; then
+    if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -le $reloj ] && [ $1 -ne $y ]; then
       proc_waitA[$y]=$(expr ${proc_waitA[$y]} + 1)
     fi
 
@@ -540,9 +525,13 @@ declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
 finDeLaPlanificacion=0
 procesoActual=0
 procesoAnterior=-1
-inicializaArrarys
 minimo=${tiemposDeCpu[0]}
 clear
+
+#todos lo procesos empiezan fuera de memoria
+for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
+  procesosEnMemoria[$i]=0
+done
 
 #Marcado del array de memoria como Li
 for ((b = 0; b < $totalMemoria; b++)); do
@@ -595,7 +584,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   if [[ ${tiemposDeCpu[$procesoActual]} -le 0 ]]; then
 
     #Tiempo de retorno del proceso: momento actual - momento de llegada
-    proc_ret[$procesoActual]=$(expr $reloj - ${tiemposDeLlegada[$procesoActual]})
+    proc_ret[$procesoActual]=$(expr $reloj + 1 - ${tiemposDeLlegada[$procesoActual]})
 
     if [ $auto != "c" ]; then
       echo -e "${blue}El proceso ${nombresProcesos[$procesoActual]} retorna al final del tiempo ${reloj}, la memoria asignada fue liberada${NC}"
