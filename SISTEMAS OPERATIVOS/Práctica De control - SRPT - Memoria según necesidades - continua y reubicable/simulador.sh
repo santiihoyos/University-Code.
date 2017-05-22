@@ -98,11 +98,11 @@ function recogeDatos() {
 
     done
 
-    echo "$totalMemoria" >InputRR.txt
+    echo "$totalMemoria" >Input.txt
   else
 
-    if [[ ! -f "InputRR.txt" || "$(wc -l InputRR.txt 2>/dev/null | cut -f1 -d" ")" -le 2 ]]; then
-      imprimeError "El fichero de entrada InputRR.txt no existe o está incompleto"
+    if [[ ! -f "Input.txt" || "$(wc -l Input.txt 2>/dev/null | cut -f1 -d" ")" -le 2 ]]; then
+      imprimeError "El fichero de entrada Input.txt no existe o está incompleto"
     fi
 
   fi
@@ -180,7 +180,7 @@ function recogeDatos() {
 
       done
 
-      printf -- "%s;" ${nombresProcesos[$iMenos1]} >>InputRR.txt
+      printf -- "%s;" ${nombresProcesos[$iMenos1]} >>Input.txt
       j=0
 
       while [ $j -eq 0 ]; do
@@ -194,7 +194,7 @@ function recogeDatos() {
 
       done
 
-      printf -- "%s;" ${tiemposDeLlegada[$iMenos1]} >>InputRR.txt
+      printf -- "%s;" ${tiemposDeLlegada[$iMenos1]} >>Input.txt
       j=0
 
       while [ $j -eq 0 ]; do
@@ -208,7 +208,7 @@ function recogeDatos() {
 
       done
 
-      printf -- "%s;" ${tiemposDeCpu[$iMenos1]} >>InputRR.txt
+      printf -- "%s;" ${tiemposDeCpu[$iMenos1]} >>Input.txt
       j=0
 
       while [ $j -eq 0 ]; do
@@ -222,7 +222,7 @@ function recogeDatos() {
 
       done
 
-      printf -- "%s\n" ${memoriaNecesaria[$iMenos1]} >>InputRR.txt
+      printf -- "%s\n" ${memoriaNecesaria[$iMenos1]} >>Input.txt
       j=0
 
       while [ $j -eq 0 ]; do
@@ -256,7 +256,7 @@ function recogeDatos() {
 
     clear
     leeDatosDesdeFichero
-    i=$proc
+    i=${#nombresProcesos[@]}
     imprimeInformacion
   fi
 
@@ -280,10 +280,10 @@ function imprimeInformacion() {
   echo " --------------------------------------------------------------- " >>$output
   echo "|    Proceso    |    Llegada    |     Ráfaga    |    Memoria    |" >>$output
 
-  for ((y = 0; y < $proc; y++)); do
+  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
     l=${ordenDeLlegada[$y]}
     echo " --------------------------------------------------------------- " >>$output
-    echo "|	${nombresProcesos[$l]}	|	${tiemposDeLlegada[$l]}	|	${tiemposDeCpu[$l]}	|	${memoriaNecesaria[$l]}	|" >>$output
+    echo "|	${nombresProcesos[$y]}	|	${tiemposDeLlegada[$y]}	|	${tiemposDeCpu[$y]}	|	${memoriaNecesaria[$y]}	|" >>$output
   done
 
   echo " --------------------------------------------------------------- " >>$output
@@ -309,8 +309,8 @@ function leeDatosDesdeFichero() {
       memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
 
       if [ -z ${memoriaNecesaria[$r]} ]; then
-        err "El fichero InputRR.txt está incompleto, se cargaran los datos por defecto"
-        cat default.txt >InputRR.txt
+        err "El fichero Input.txt está incompleto, se cargaran los datos por defecto"
+        cat default.txt >Input.txt
         read -p "Pulse enter para reiniciar"
         exec $0
       fi
