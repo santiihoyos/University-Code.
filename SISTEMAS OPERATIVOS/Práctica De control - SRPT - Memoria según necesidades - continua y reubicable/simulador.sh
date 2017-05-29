@@ -497,26 +497,19 @@ function aumentaTiempoAcumuladoProcesos() {
   echo -e "$info                                               					       	   $info"
   echo -e "$info		   SRPT, memoria según necesidades,coninua y reubicable               	    	   $info"
   echo -e "$info                                                                                                  $info"
-  echo -e "$info					    Programado por:					   $info"
-  echo -e "$info			     Santiago Hoyos Zea <shz1001@alu.ubu.es>        			   $info"
+  echo -e "$info		              Antiguos programadores en R.R.:           		           $info"
+  echo -e "$info			               Mario Juez Gil        			                   $info"
+  echo -e "$info			             Luis Pedrosa Ruiz       			                   $info"
+  echo -e "$info		                José Luis Garrido Labrador  			                   $info"
+  echo -e "$info			           Omar Santos Bernabé       		                           $info"
   echo -e "$info                                                                                                  $info"
-  echo -e "$info					      Licencias:					   $info"
-  echo -e "$info				        CC-BY-SA (Documentación)				   $info"
-  echo -e "$info					    GPLv3 (Código)					   $info"
+  echo -e "$info	                         Fork SRPT  Programado por:					   $info"
+  echo -e "$info			   Santiago Hoyos Zea <shz1001@alu.ubu.es>                    		   $info"
+  echo -e "$info                                                                                                  $info"
+  echo -e "$info					  Licencias:					           $info"
+  echo -e "$info				    CC-BY-SA (Documentación)				           $info"
+  echo -e "$info					GPLv3 (Código)					           $info"
   echo -e "${minuscyan} -------------------------------------------------------------------------------------------------- ${NC}"
-  echo " -------------------------------------------------------------------------------------------------- " >$output
-  echo "|		Práctica de Control - Sistemas Operativos - Grado en Ingeniería Informática	   |" >>$output
-  echo "|                                               					       	   |" >>$output
-  echo "|		   SRPT, memoria según necesidades,coninua y reubicable	    	   |" >>$output
-  echo "|                                                                                                  |" >>$output
-  echo "|					    Programado por:					   |" >>$output
-  echo "|			     Santiago Hoyos Zea <shz1001@alu.ubu.es>			   |" >>$output
-  echo "|                                                                                                  |" >>$output
-  echo "|					      Licencias:					   |" >>$output
-  echo "|				        CC-BY-SA (Documentación)				   |" >>$output
-  echo "|					    GPLv3 (Código)					   |" >>$output
-  echo " -------------------------------------------------------------------------------------------------- " >>$output
-
 }
 
 recogeDatos
