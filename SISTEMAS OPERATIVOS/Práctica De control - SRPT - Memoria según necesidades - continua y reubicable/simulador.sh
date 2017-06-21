@@ -18,6 +18,8 @@
 nombresProcesos={}
 tiemposDeLlegada={}
 tiemposDeCpu={}
+tiemposDeCpuCopia={}
+estados={}
 
 #variables de memoria
 memoria={}
@@ -31,6 +33,9 @@ declare -i reloj
 reloj=-1
 auto=0 #indica si la ejecucion se hace sin intervención humana obcion b y c
 
+#constante de posibles estados
+estados={"","",""}
+
 #Variables Colores
 {
   coffe='\e[0;33m'
@@ -41,8 +46,10 @@ auto=0 #indica si la ejecucion se hace sin intervención humana obcion b y c
   blue='\e[1;34m'
   NC='\e[0m' # No Color
   Li="${cyan}Li${NC}"
-  info="${minuscyan}|${NC}"
+  info="${minuscyan}|${NC}" #legacy
+  separadorVertical="${minuscyan}|${NC}"
   output="informe$(date +%d%m%y-%H%M).txt"
+  outputColores="informe$(date +%d%m%y-%H%M)_Color.txt"
 }
 
 #Función validaRespuestaSiNo; comprueba si se ha medito un si o un no
@@ -202,6 +209,7 @@ function recogeDatos() {
 
         if [ "${tiemposDeCpu[$iMenos1]}" -gt 0 ] 2>/dev/null; then
           j=1
+          tiemposDeCpuCopia[$iMenos1]=${tiemposDeCpu[$iMenos1]}
         else
           imprimeError "Dato incorrecto"
         fi
@@ -306,6 +314,7 @@ function leeDatosDesdeFichero() {
       nombresProcesos[$r]=$(echo $y | cut -f1 -d";")
       tiemposDeLlegada[$r]=$(echo $y | cut -f2 -d";")
       tiemposDeCpu[$r]=$(echo $y | cut -f3 -d";")
+      tiemposDeCpuCopia[$r]=${tiemposDeCpu[$r]}
       memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
 
       if [ -z ${memoriaNecesaria[$r]} ]; then
@@ -380,6 +389,12 @@ function asignaMemoria() {
                 memoria[$m]=${nombresProcesos[$i]}
               done
 
+              #marcamos el proceso en memoria si no esta en pausa,
+              #ya ques is está en pausa es que esta en memoria
+              if [ estados[$i]!="EN PAUSA" ] || [ estados[$i]!="EN EJECUCION" ]; then
+                estados[$i]="EN MEMORIA"
+              fi
+
               break
             fi
           fi
@@ -410,6 +425,7 @@ function asignaMemoria() {
 
       else
         echo -e "${red}Houston! tenemos un problema, no hay memoria para "${nombresProcesos[$i]}" se intentara alojar después :(${NC}"
+        estados[$i]="SIN MEMO."
       fi
 
     fi
@@ -425,11 +441,11 @@ function Estado() {
   local memIni
   local memFin
 
-  if [ $auto != "c" ]; then
-    echo -e "${coffe}Al final de la ejecución de este tiempo los datos son:${NC}"
-    echo -e "${minuscyan} -----------------------------------------------------------------------------------------------------------------------------------------------${NC} "
-    echo -e "$info    Procesos   $info    Llegada    $info     Tiempo esp acumulado      $info      Ejecución restante       $info    Memoria    $info  Pos mem ini  $info  Pos mem fin  $info"
-  fi
+  #if [ $auto != "c" ]; then
+  #echo -e "${coffe}Al final de la ejecución de este tiempo los datos son:${NC}"
+  #echo -e "${minuscyan} -----------------------------------------------------------------------------------------------------------------------------------------------${NC} "
+  #echo -e "$info    Procesos   $info    Llegada    $info     Tiempo esp acumulado      $info  Ejecución restante  $info  Memoria  $info  Pos mem ini  $info  Pos mem fin  $info"
+  #fi
 
   echo "" >>$output
   echo "Al final de la ejecución de este tiempo los datos son:" >>$output
@@ -458,12 +474,12 @@ function Estado() {
     fi
 
     if [ $auto != "c" ]; then
-      echo -e "${minuscyan} ----------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
-      echo -e "$info	${nombresProcesos[$pp]}	$info	${tiemposDeLlegada[$pp]}	$info		${proc_waitA[$pp]}		$info		$restante		$info	${memoriaNecesaria[$pp]}	$info	$memIni	$info	$memFin	$info"
+      echo -e "${minuscyan} --------------------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
+      echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}    retorno    $restante    $memIni   $memFin   ${estados[$pp]}"
     fi
 
     echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
-    echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|" >>$output
+    echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|  $estados[$pp]" >>$output
 
   done
 
@@ -472,6 +488,25 @@ function Estado() {
   fi
 
   echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
+}
+
+#imprime las cabeceras en las salidas del sistema
+function inprimeCabecera() {
+
+  #impresion en la salida estadar
+  echo -e "${minuscyan}..........................................................................................................................................${NC}"
+  echo -e $separadorVertical Procesos $separadorVertical T. ejecución $separadorVertical Memoria $separadorVertical Llegada $separadorVertical T. esp. acumulado $separadorVertical T. retorno $separadorVertical T. eje. restante $separadorVertical Estado $separadorVertical Pos mem. ini $separadorVertical Pos mem. fin $separadorVertical
+  echo -e "${minuscyan}..........................................................................................................................................${NC}"
+
+  #impresion de la salida de fichero con color
+  echo -e "${minuscyan}..........................................................................................................................................${NC}" >>$outputColores
+  echo -e $separadorVertical Procesos $separadorVertical T. ejecución $separadorVertical Memoria $separadorVertical Llegada $separadorVertical T. esp. acumulado $separadorVertical T. retorno $separadorVertical T. eje. restante $separadorVertical Estado $separadorVertical Pos mem. ini $separadorVertical Pos mem. fin $separadorVertical >>$outputColores
+  echo -e "${minuscyan}..........................................................................................................................................${NC}" >>$outputColores
+
+  #impresión en la salida de fichero sin color
+  echo "..........................................................................................................................................." >>$output
+  echo "| Procesos | T. ejecución | Memoria | Llegada | T. esp. acumulado | T. retorno | T. eje. restante |  Estado | Pos mem. ini | Pos mem. fin  |" >>$output
+  echo "..........................................................................................................................................." >>$output
 }
 
 #Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a lso proceos
@@ -518,13 +553,16 @@ declare proc_waitA[${#nombresProcesos[@]}] #Tiempo de espera acumulado
 declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
 finDeLaPlanificacion=0
 procesoActual=0
-procesoAnterior=-1
+procesoAnterior=0
 minimo=${tiemposDeCpu[0]}
 clear
 
 #todos lo procesos empiezan fuera de memoria
 for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
   procesosEnMemoria[$i]=0
+  estados[$i]="SIN LLEGAR"
+  memoriaNecesariaI[$i]="NA"
+  memoriaNecesariaF[$i]="NA"
 done
 
 #Marcado del array de memoria como Li
@@ -543,49 +581,62 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   let reloj++
 
   if [ $auto != "c" ]; then
-    echo -e "${green}Unidad de tiempo actual $reloj ${NC}"
+    echo -e "${green}Instante actual $reloj ${NC}"
   fi
   echo "" >>$output
-  echo "Unidad de tiempo actual $reloj" >>$output
+  echo "Instante actual $reloj" >>$output
 
   asignaMemoria
 
-  #Elegimos el proceso a ejecutar: será el que menos cpu le quede para acabar
+  #Elegimos el proceso a ejecutar: será el que menos cpu le quede para acabar que este en memoria y haya llegado
   for ((candidato = 0; candidato < ${#tiemposDeCpu[@]}; candidato++)); do
 
     if [ ${procesosEnMemoria[$candidato]} -eq 1 ] && [ ${tiemposDeLlegada[$candidato]} -le ${reloj} ] \
       && [ ${tiemposDeCpu[$candidato]} -lt ${minimo} ] && [ ${tiemposDeCpu[$candidato]} -ne 0 ]; then
 
-      procesoAnterior=$procesoActual
       procesoActual=$candidato
       minimo=${tiemposDeCpu[$candidato]}
-
     fi
 
   done
 
   aumentaTiempoAcumuladoProcesos $procesoActual
 
+  echo "anterior = $procesoAnterior"
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
-    echo "El proceso" ${nombresProcesos[$procesoActual]} "ha entrado en CPU."
+
+    #echo "El proceso" ${nombresProcesos[$procesoActual]} "se ha ejecutado en el tiempo $reloj"
+
+    if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ]; then
+      estados[$procesoAnterior]="EN PAUSA"
+    elif [ "${estados[$procesoAnterior]}" == "EJECUTADO y FINALIZANDO" ] && [ $procesoAnterior -ge 0 ]; then
+      estados[$procesoAnterior]="FINALIZADO"
+    fi
+
   else
-    echo "Sigue el proceso" ${nombresProcesos[$procesoActual]} "en CPU."
+
+    #echo "El proceso" ${nombresProcesos[$procesoActual]} "se ha ejecutado en el tiempo $reloj "
+
     let minimo--
   fi
 
   #reducimos el tiempo de CPU del proceso actual y aumentamos el reloj en 1
+  estados[$procesoActual]="EN EJECUCION"
   tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
 
   #El proceso actual acaba en este tiempo
   if [[ ${tiemposDeCpu[$procesoActual]} -le 0 ]]; then
 
+    estados[$procesoActual]="EJECUTADO y FINALIZANDO"
+    procesoAnterior=$procesoActual
+
     #Tiempo de retorno del proceso: momento actual - momento de llegada
     proc_ret[$procesoActual]=$(expr $reloj + 1 - ${tiemposDeLlegada[$procesoActual]})
 
-    if [ $auto != "c" ]; then
-      echo -e "${blue}El proceso ${nombresProcesos[$procesoActual]} retorna al final del tiempo ${reloj}, la memoria asignada fue liberada${NC}"
-    fi
+    #if [ $auto != "c" ]; then
+    #  echo -e "${blue}El proceso ${nombresProcesos[$procesoActual]} retorna al acabar el tiempo $reloj, la memoria asignada fue liberada${NC}"
+    #fi
 
     #Como el minimo es 0 en este momento tenemos que buscar un minimo comparable
     #para ello cogemos el primer proceso con necesidad > 0 y que este ya en memoria
@@ -602,13 +653,14 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     recolectaBasura
   fi
 
-  Estado
-
-  echo -n -e "${blue}Mapa de memoria al final del instante: {${NC}"
+  #Impresion de memoria del sistema
+  echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}"
   for ((memoPos = 0; memoPos < totalMemoria; memoPos++)); do
     echo -n -e " ${memoria[$memoPos]}"
   done
   echo -n -e " ${blue}}${NC}\n"
+
+  Estado
 
   #Esperar enter o no
   if [ $auto = "a" ]; then
