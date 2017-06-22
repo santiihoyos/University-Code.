@@ -457,7 +457,7 @@ function Estado() {
     pp=p #${ordenDeLlegada[$p]}
 
     if [ ${tiemposDeCpu[$pp]} -eq 0 ]; then
-      restante="END"
+      restante="0"
     else
       restante=${tiemposDeCpu[$pp]}
     fi
@@ -475,7 +475,7 @@ function Estado() {
 
     if [ $auto != "c" ]; then
       echo -e "${minuscyan} --------------------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
-      echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}    retorno    $restante    $memIni   $memFin   ${estados[$pp]}"
+      echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}  ${proc_ret[$pp]}  $restante   {$memIni - $memFin}   ${estados[$pp]}"
     fi
 
     echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
@@ -514,12 +514,20 @@ function inprimeCabecera() {
 function aumentaTiempoAcumuladoProcesos() {
 
   for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
-
     if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -le $reloj ] && [ $1 -ne $y ]; then
       proc_waitA[$y]=$(expr ${proc_waitA[$y]} + 1)
     fi
-
   done
+
+}
+
+#imprime el estado actual de la memoria del sistema
+function imprimeMemoria() {
+  echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}"
+  for ((memoPos = 0; memoPos < totalMemoria; memoPos++)); do
+    echo -n -e " ${memoria[$memoPos]}"
+  done
+  echo -n -e " ${blue}}${NC}\n"
 }
 
 ###################### INICIO DEL SCRIPT #################
@@ -554,6 +562,7 @@ declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
 finDeLaPlanificacion=0
 procesoActual=0
 procesoAnterior=0
+onEventoDestacable=1
 minimo=${tiemposDeCpu[0]}
 clear
 
@@ -606,12 +615,14 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
 
-    #echo "El proceso" ${nombresProcesos[$procesoActual]} "se ha ejecutado en el tiempo $reloj"
-
     if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ]; then
       estados[$procesoAnterior]="EN PAUSA"
+      echo "Cambio de contexto"
+      onEventoDestacable=1
     elif [ "${estados[$procesoAnterior]}" == "EJECUTADO y FINALIZANDO" ] && [ $procesoAnterior -ge 0 ]; then
       estados[$procesoAnterior]="FINALIZADO"
+      echo "Cambio de contexto"
+      onEventoDestacable=1
     fi
 
   else
@@ -622,7 +633,13 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   fi
 
   #reducimos el tiempo de CPU del proceso actual y aumentamos el reloj en 1
-  estados[$procesoActual]="EN EJECUCION"
+
+  if [ ${tiemposDeCpu[$procesoActual]} -eq ${tiemposDeCpuCopia[$procesoActual]} ]; then
+    estados[$procesoActual]="ENTRA Y SE EJECUTA"
+  else
+    estados[$procesoActual]="EN EJECUCION"
+  fi
+
   tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
 
   #El proceso actual acaba en este tiempo
@@ -653,24 +670,24 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     recolectaBasura
   fi
 
-  #Impresion de memoria del sistema
-  echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}"
-  for ((memoPos = 0; memoPos < totalMemoria; memoPos++)); do
-    echo -n -e " ${memoria[$memoPos]}"
-  done
-  echo -n -e " ${blue}}${NC}\n"
+  if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
 
-  Estado
+    imprimeMemoria
+    Estado
 
-  #Esperar enter o no
-  if [ $auto = "a" ]; then
+    #Esperar enter o no
+    if [ $auto = "a" ]; then
 
-    if [ $finDeLaPlanificacion -ne 1 ]; then
-      echo ""
-      read -p "Pulse intro para continuar"
+      if [ $finDeLaPlanificacion -ne 1 ]; then
+        echo ""
+        read -p "Pulse intro para continuar"
+      fi
+    elif [ $auto = "b" ]; then
+      sleep 5
     fi
-  elif [ $auto = "b" ]; then
-    sleep 5
+
+    onEventoDestacable=0
+
   fi
 
 done
