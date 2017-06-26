@@ -20,6 +20,7 @@ tiemposDeLlegada={}
 tiemposDeCpu={}
 tiemposDeCpuCopia={}
 estados={}
+ordenImpresion={}
 
 #variables de memoria
 memoria={}
@@ -195,6 +196,9 @@ function recogeDatos() {
 
         if [ "${tiemposDeLlegada[$iMenos1]}" -ge 0 ] 2>/dev/null; then
           j=1
+          if [[ ${tiemposDeLlegada[$iMenos1]} -gt $instanteMayor ]]; then
+            instanteMayor=${tiemposDeLlegada[$iMenos1]}
+          fi
         else
           imprimeError "Dato incorrecto"
         fi
@@ -316,6 +320,10 @@ function leeDatosDesdeFichero() {
       tiemposDeCpu[$r]=$(echo $y | cut -f3 -d";")
       tiemposDeCpuCopia[$r]=${tiemposDeCpu[$r]}
       memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
+
+      if [[ $tiemposDeLlegada -gt $instanteMayor ]]; then
+        instanteMayor=$tiemposDeLlegada
+      fi
 
       if [ -z ${memoriaNecesaria[$r]} ]; then
         err "El fichero Input.txt está incompleto, se cargaran los datos por defecto"
@@ -512,13 +520,11 @@ function inprimeCabecera() {
 #Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a lso proceos
 #que ya han llegado y que no hayan acabado y no este en cpu
 function aumentaTiempoAcumuladoProcesos() {
-
   for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
     if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -le $reloj ] && [ $1 -ne $y ]; then
       proc_waitA[$y]=$(expr ${proc_waitA[$y]} + 1)
     fi
   done
-
 }
 
 #imprime el estado actual de la memoria del sistema
@@ -564,15 +570,18 @@ procesoActual=0
 procesoAnterior=0
 onEventoDestacable=1
 minimo=${tiemposDeCpu[0]}
+instanteMayor=0
 clear
 
-#todos lo procesos empiezan fuera de memoria
+#Rellenado de algunos arrays de datos
 for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
   procesosEnMemoria[$i]=0
   estados[$i]="SIN LLEGAR"
   memoriaNecesariaI[$i]="NA"
   memoriaNecesariaF[$i]="NA"
 done
+
+ordenImpresion=ordenDeLlegada
 
 #Marcado del array de memoria como Li
 for ((b = 0; b < $totalMemoria; b++)); do
@@ -583,10 +592,12 @@ for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
   proc_waitA[$i]=0
 done
 
+echo "${ordenarImpresion[*]}"
+
 #Bucle de planificación
 while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
-  clear
+  #clear
   let reloj++
 
   if [ $auto != "c" ]; then
@@ -611,7 +622,6 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
   aumentaTiempoAcumuladoProcesos $procesoActual
 
-  echo "anterior = $procesoAnterior"
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
 
@@ -624,36 +634,30 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
       echo "Cambio de contexto"
       onEventoDestacable=1
     fi
-
   else
-
     #echo "El proceso" ${nombresProcesos[$procesoActual]} "se ha ejecutado en el tiempo $reloj "
-
     let minimo--
   fi
 
-  #reducimos el tiempo de CPU del proceso actual y aumentamos el reloj en 1
-
+  #Diferenciamos entre entra y se ejecuta a en ejecución que simplemente indica que sigue ejecutandose
   if [ ${tiemposDeCpu[$procesoActual]} -eq ${tiemposDeCpuCopia[$procesoActual]} ]; then
     estados[$procesoActual]="ENTRA Y SE EJECUTA"
   else
     estados[$procesoActual]="EN EJECUCION"
   fi
 
-  tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
+  if [[ ${tiemposDeCpu[$procesoActual]} -gt 0 ]]; then
+    tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
+  fi
 
   #El proceso actual acaba en este tiempo
-  if [[ ${tiemposDeCpu[$procesoActual]} -le 0 ]]; then
+  if [[ ${tiemposDeCpu[$procesoActual]} -eq 0 ]]; then
 
     estados[$procesoActual]="EJECUTADO y FINALIZANDO"
     procesoAnterior=$procesoActual
 
     #Tiempo de retorno del proceso: momento actual - momento de llegada
     proc_ret[$procesoActual]=$(expr $reloj + 1 - ${tiemposDeLlegada[$procesoActual]})
-
-    #if [ $auto != "c" ]; then
-    #  echo -e "${blue}El proceso ${nombresProcesos[$procesoActual]} retorna al acabar el tiempo $reloj, la memoria asignada fue liberada${NC}"
-    #fi
 
     #Como el minimo es 0 en este momento tenemos que buscar un minimo comparable
     #para ello cogemos el primer proceso con necesidad > 0 y que este ya en memoria
@@ -664,20 +668,21 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
         procesoActual=$i
         finDeLaPlanificacion=0
         break
+      else
+        procesoActual=-1
       fi
     done
 
     recolectaBasura
   fi
 
+  onEventoDestacable=1
   if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
-
     imprimeMemoria
     Estado
 
     #Esperar enter o no
     if [ $auto = "a" ]; then
-
       if [ $finDeLaPlanificacion -ne 1 ]; then
         echo ""
         read -p "Pulse intro para continuar"
@@ -687,9 +692,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     fi
 
     onEventoDestacable=0
-
   fi
-
 done
 
 #Post planificación
