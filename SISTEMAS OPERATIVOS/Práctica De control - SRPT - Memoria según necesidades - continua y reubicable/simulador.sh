@@ -20,7 +20,6 @@ tiemposDeLlegada={}
 tiemposDeCpu={}
 tiemposDeCpuCopia={}
 estados={}
-ordenImpresion={}
 
 #variables de memoria
 memoria={}
@@ -458,8 +457,8 @@ function Estado() {
 
   echo "" >>$output
   echo "Al final de la ejecución de este tiempo los datos son:" >>$output
-  echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
-  echo "|    Procesos   |    Llegada    |     Tiempo esp acumulado      |      Ejecución restante       |    Memoria    |  Pos mem ini  |  Pos mem fin  |" >>$output
+  echo " -----------------------------------------------------------------------------------------------------------------------------------"
+  echo -e "|     Nombre	|  T. llegada  | T. Nec. | Mem. Nec. | T. Esp. Acu. | T. Ret. | T. rest. |   Mapa Mem.  |	Estado		"
 
   for ((p = 0; p <= $instanteMayor; p++)); do
     for ((n = 0; n < ${#nombresProcesos[@]}; n++)); do
@@ -485,8 +484,8 @@ function Estado() {
         fi
 
         if [ $auto != "c" ]; then
-          echo -e "${minuscyan} --------------------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
-          echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}  ${proc_ret[$pp]}  $restante   {$memIni - $memFin}   ${estados[$pp]}"
+          echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC}"
+          echo -e "$info	${nombresProcesos[$pp]}		${tiemposDeLlegada[$pp]}	   ${tiemposDeCpuCopia[$pp]}		${memoriaNecesaria[$pp]}	   ${proc_waitA[$pp]}		${proc_ret[$pp]}	   $restante	     {$memIni - $memFin}	     ${estados[$pp]}		"
         fi
 
         echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
@@ -497,7 +496,7 @@ function Estado() {
   done
 
   if [ $auto != "c" ]; then
-    echo -e "${minuscyan} -----------------------------------------------------------------------------------------------------------------------------------------------${NC} "
+    echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC} "
   fi
 
   echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
@@ -583,9 +582,8 @@ for ((i = 0; i < ${#nombresProcesos[@]}; i++)); do
   estados[$i]="SIN LLEGAR"
   memoriaNecesariaI[$i]="NA"
   memoriaNecesariaF[$i]="NA"
+  proc_ret[$i]=0
 done
-
-ordenImpresion=ordenDeLlegada
 
 #Marcado del array de memoria como Li
 for ((b = 0; b < $totalMemoria; b++)); do
