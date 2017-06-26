@@ -33,6 +33,7 @@ memoriaNecesaria={}
 declare -i reloj
 reloj=-1
 auto=0 #indica si la ejecucion se hace sin intervención humana obcion b y c
+instanteMayor=0
 
 #constante de posibles estados
 estados={"","",""}
@@ -321,8 +322,8 @@ function leeDatosDesdeFichero() {
       tiemposDeCpuCopia[$r]=${tiemposDeCpu[$r]}
       memoriaNecesaria[$r]=$(echo $y | cut -f4 -d";")
 
-      if [[ $tiemposDeLlegada -gt $instanteMayor ]]; then
-        instanteMayor=$tiemposDeLlegada
+      if [[ ${tiemposDeLlegada[$r]} -gt $instanteMayor ]]; then
+        instanteMayor=${tiemposDeLlegada[$r]}
       fi
 
       if [ -z ${memoriaNecesaria[$r]} ]; then
@@ -460,35 +461,39 @@ function Estado() {
   echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
   echo "|    Procesos   |    Llegada    |     Tiempo esp acumulado      |      Ejecución restante       |    Memoria    |  Pos mem ini  |  Pos mem fin  |" >>$output
 
-  for ((p = 0; p < ${#nombresProcesos[@]}; p++)); do
+  for ((p = 0; p <= $instanteMayor; p++)); do
+    for ((n = 0; n < ${#nombresProcesos[@]}; n++)); do
+      pp=$n
 
-    pp=p #${ordenDeLlegada[$p]}
+      if [[ ${tiemposDeLlegada[$pp]} -eq $p ]]; then
 
-    if [ ${tiemposDeCpu[$pp]} -eq 0 ]; then
-      restante="0"
-    else
-      restante=${tiemposDeCpu[$pp]}
-    fi
+        if [ ${tiemposDeCpu[$pp]} -eq 0 ]; then
+          restante="0"
+        else
+          restante=${tiemposDeCpu[$pp]}
+        fi
 
-    if [ ${memoriaNecesariaI[$pp]} = "-1" ] 2>/dev/null; then
-      memIni="NA"
-      memFin="NA"
-    elif [ ${memoriaNecesariaI[$pp]} = "-2" ] 2>/dev/null; then
-      memIni="END"
-      memFin="END"
-    else
-      memIni=${memoriaNecesariaI[$pp]}
-      memFin=${memoriaNecesariaF[$pp]}
-    fi
+        if [ ${memoriaNecesariaI[$pp]} = "-1" ] 2>/dev/null; then
+          memIni="NA"
+          memFin="NA"
+        elif [ ${memoriaNecesariaI[$pp]} = "-2" ] 2>/dev/null; then
+          memIni="END"
+          memFin="END"
+        else
+          memIni=${memoriaNecesariaI[$pp]}
+          memFin=${memoriaNecesariaF[$pp]}
+        fi
 
-    if [ $auto != "c" ]; then
-      echo -e "${minuscyan} --------------------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
-      echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}  ${proc_ret[$pp]}  $restante   {$memIni - $memFin}   ${estados[$pp]}"
-    fi
+        if [ $auto != "c" ]; then
+          echo -e "${minuscyan} --------------------------------------------------------------------------------------------------------------------------------------------------------- ${NC}"
+          echo -e "$info  ${nombresProcesos[$pp]}   ${tiemposDeLlegada[$pp]}    ${tiemposDeCpuCopia[$pp]}   ${memoriaNecesaria[$pp]}    ${proc_waitA[$pp]}  ${proc_ret[$pp]}  $restante   {$memIni - $memFin}   ${estados[$pp]}"
+        fi
 
-    echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
-    echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|  $estados[$pp]" >>$output
+        echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
+        echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|  $estados[$pp]" >>$output
 
+      fi
+    done
   done
 
   if [ $auto != "c" ]; then
@@ -569,8 +574,7 @@ finDeLaPlanificacion=0
 procesoActual=0
 procesoAnterior=0
 onEventoDestacable=1
-minimo=${tiemposDeCpu[0]}
-instanteMayor=0
+minimo=99999999
 clear
 
 #Rellenado de algunos arrays de datos
@@ -614,6 +618,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     if [ ${procesosEnMemoria[$candidato]} -eq 1 ] && [ ${tiemposDeLlegada[$candidato]} -le ${reloj} ] \
       && [ ${tiemposDeCpu[$candidato]} -lt ${minimo} ] && [ ${tiemposDeCpu[$candidato]} -ne 0 ]; then
 
+      procesoAnterior=$procesoActual
       procesoActual=$candidato
       minimo=${tiemposDeCpu[$candidato]}
     fi
@@ -625,7 +630,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
 
-    if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ]; then
+    if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ] && [ ${tiemposDeLlegada[$procesoAnterior]} -le $reloj ]; then
       estados[$procesoAnterior]="EN PAUSA"
       echo "Cambio de contexto"
       onEventoDestacable=1
@@ -646,9 +651,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     estados[$procesoActual]="EN EJECUCION"
   fi
 
-  if [[ ${tiemposDeCpu[$procesoActual]} -gt 0 ]]; then
-    tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
-  fi
+  tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
 
   #El proceso actual acaba en este tiempo
   if [[ ${tiemposDeCpu[$procesoActual]} -eq 0 ]]; then
@@ -668,8 +671,6 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
         procesoActual=$i
         finDeLaPlanificacion=0
         break
-      else
-        procesoActual=-1
       fi
     done
 
@@ -693,6 +694,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
     onEventoDestacable=0
   fi
+
 done
 
 #Post planificación
