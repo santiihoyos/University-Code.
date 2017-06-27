@@ -449,16 +449,19 @@ function Estado() {
   local memIni
   local memFin
 
-  #if [ $auto != "c" ]; then
-  #echo -e "${coffe}Al final de la ejecución de este tiempo los datos son:${NC}"
-  #echo -e "${minuscyan} -----------------------------------------------------------------------------------------------------------------------------------------------${NC} "
-  #echo -e "$info    Procesos   $info    Llegada    $info     Tiempo esp acumulado      $info  Ejecución restante  $info  Memoria  $info  Pos mem ini  $info  Pos mem fin  $info"
-  #fi
+  #impresion consola
+  if [ $auto != "c" ]; then
+    echo " -----------------------------------------------------------------------------------------------------------------------------------"
+    echo -e "|     Nombre	|  T. llegada  | T. Nec. | Mem. Nec. | T. Esp. Acu. | T. Ret. | T. rest. |   Mapa Mem.  |	Estado		"
+  fi
 
-  echo "" >>$output
-  echo "Al final de la ejecución de este tiempo los datos son:" >>$output
-  echo " -----------------------------------------------------------------------------------------------------------------------------------"
-  echo -e "|     Nombre	|  T. llegada  | T. Nec. | Mem. Nec. | T. Esp. Acu. | T. Ret. | T. rest. |   Mapa Mem.  |	Estado		"
+  #impresion fichero sin color
+  echo " -----------------------------------------------------------------------------------------------------------------------------------" >>$output
+  echo "|     Nombre	|  T. llegada  | T. Nec. | Mem. Nec. | T. Esp. Acu. | T. Ret. | T. rest. |   Mapa Mem.  |	Estado		" >>$output
+
+  #impresion fichero color
+  echo " -----------------------------------------------------------------------------------------------------------------------------------" >>$outputColores
+  echo "|     Nombre	|  T. llegada  | T. Nec. | Mem. Nec. | T. Esp. Acu. | T. Ret. | T. rest. |   Mapa Mem.  |	Estado		" >>$outputColores
 
   for ((p = 0; p <= $instanteMayor; p++)); do
     for ((n = 0; n < ${#nombresProcesos[@]}; n++)); do
@@ -483,23 +486,37 @@ function Estado() {
           memFin=${memoriaNecesariaF[$pp]}
         fi
 
+        #salida consola
         if [ $auto != "c" ]; then
           echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC}"
           echo -e "$info	${nombresProcesos[$pp]}		${tiemposDeLlegada[$pp]}	   ${tiemposDeCpuCopia[$pp]}		${memoriaNecesaria[$pp]}	   ${proc_waitA[$pp]}		${proc_ret[$pp]}	   $restante	     {$memIni - $memFin}	     ${estados[$pp]}		"
         fi
 
-        echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
-        echo "|	${nombresProcesos[$pp]}	|	${tiemposDeLlegada[$pp]}	|		${proc_waitA[$pp]}		|		$restante		|	${memoriaNecesaria[$pp]}	|	$memIni	|	$memFin	|  $estados[$pp]" >>$output
+        #fichero sin color
+        echo "------------------------------------------------------------------------------------------------------------------------------------" >>$output
+        echo "|	${nombresProcesos[$pp]}		${tiemposDeLlegada[$pp]}	   ${tiemposDeCpuCopia[$pp]}		${memoriaNecesaria[$pp]}	   ${proc_waitA[$pp]}		${proc_ret[$pp]}	   $restante	     {$memIni - $memFin}	     ${estados[$pp]}		" >>$output
+
+        #fichero colores
+        echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC}" >>$outputColores
+        echo -e "$info	${nombresProcesos[$pp]}		${tiemposDeLlegada[$pp]}	   ${tiemposDeCpuCopia[$pp]}		${memoriaNecesaria[$pp]}	   ${proc_waitA[$pp]}		${proc_ret[$pp]}	   $restante	     {$memIni - $memFin}	     ${estados[$pp]}		" >>$outputColores
 
       fi
+
     done
+
   done
 
+  #salida consola
   if [ $auto != "c" ]; then
     echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC} "
   fi
 
-  echo " ----------------------------------------------------------------------------------------------------------------------------------------------- " >>$output
+  #fichero sin color
+  echo "------------------------------------------------------------------------------------------------------------------------------------" >>$output
+
+  #fichero con color
+  echo -e "${minuscyan}------------------------------------------------------------------------------------------------------------------------------------${NC} " >>$outputColores
+
 }
 
 #imprime las cabeceras en las salidas del sistema
@@ -533,11 +550,34 @@ function aumentaTiempoAcumuladoProcesos() {
 
 #imprime el estado actual de la memoria del sistema
 function imprimeMemoria() {
-  echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}"
+  if [ $auto != "c" ]; then
+    echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}"
+  fi
+
+  echo -n "Mapa de memoria en el instante $reloj {" >>$output
+  echo -n -e "${blue}Mapa de memoria en el instante $reloj {${NC}" >>$outputColores
+
   for ((memoPos = 0; memoPos < totalMemoria; memoPos++)); do
-    echo -n -e " ${memoria[$memoPos]}"
+
+    if [ $auto != "c" ]; then
+      echo -n -e " ${memoria[$memoPos]}"
+    fi
+
+    if [[ ${memoria[$memoPos]} == "$Li" ]]; then
+      echo -n " Li" >>$output
+    else
+      echo -n " ${memoria[$memoPos]}" >>$output
+    fi
+
+    echo -n -e " ${memoria[$memoPos]}" >>$outputColores
+
   done
-  echo -n -e " ${blue}}${NC}\n"
+  if [ $auto != "c" ]; then
+    echo -n -e " ${blue}}${NC}\n"
+  fi
+
+  echo -n -e " }\n" >>$output
+  echo -n -e " ${blue}}${NC}\n" >>$outputColores
 }
 
 ###################### INICIO DEL SCRIPT #################
@@ -599,14 +639,8 @@ echo "${ordenarImpresion[*]}"
 #Bucle de planificación
 while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
-  #clear
+  clear
   let reloj++
-
-  if [ $auto != "c" ]; then
-    echo -e "${green}Instante actual $reloj ${NC}"
-  fi
-  echo "" >>$output
-  echo "Instante actual $reloj" >>$output
 
   asignaMemoria
 
@@ -630,15 +664,26 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
     if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ] && [ ${tiemposDeLlegada[$procesoAnterior]} -le $reloj ]; then
       estados[$procesoAnterior]="EN PAUSA"
-      echo "Cambio de contexto"
+
+      if [ $auto != "c" ]; then
+        echo "Cambio de contexto"
+      fi
+      echo "Cambio de contexto" >>$output
+      echo "Cambio de contexto" >>$outputColores
+
       onEventoDestacable=1
     elif [ "${estados[$procesoAnterior]}" == "EJECUTADO y FINALIZANDO" ] && [ $procesoAnterior -ge 0 ]; then
       estados[$procesoAnterior]="FINALIZADO"
-      echo "Cambio de contexto"
+
+      if [ $auto != "c" ]; then
+        echo "Cambio de contexto"
+      fi
+      echo "Cambio de contexto" >>$output
+      echo "Cambio de contexto" >>$outputColores
+
       onEventoDestacable=1
     fi
   else
-    #echo "El proceso" ${nombresProcesos[$procesoActual]} "se ha ejecutado en el tiempo $reloj "
     let minimo--
   fi
 
@@ -675,8 +720,18 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     recolectaBasura
   fi
 
-  onEventoDestacable=1
+  #onEventoDestacable=1
   if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
+
+    if [ $auto != "c" ] && [ $onEventoDestacable -eq 1 ]; then
+
+      if [ $auto != "c" ]; then
+        echo -e "${green}Instante actual $reloj ${NC}"
+      fi
+      echo "Instante actual $reloj" >>$output
+      echo -e "${green}Instante actual $reloj ${NC}" >>$outputColores
+    fi
+
     imprimeMemoria
     Estado
 
