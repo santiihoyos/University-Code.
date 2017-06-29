@@ -110,7 +110,13 @@ function recogeDatos() {
   else
 
     if [[ ! -f "Input.txt" || "$(wc -l Input.txt 2>/dev/null | cut -f1 -d" ")" -le 2 ]]; then
-      imprimeError "El fichero de entrada Input.txt no existe o está incompleto"
+      imprimeError "!!El fichero de entrada Input.txt no existe o está incompleto... creado uno nuevo por default!"
+      echo "12
+      1;0;7;1
+      p2;1;6;2
+      p3;2;2;10
+      p4;2;3;6
+      p5;3;4;2" >>Input.txt
     fi
 
   fi
@@ -326,8 +332,7 @@ function leeDatosDesdeFichero() {
       fi
 
       if [ -z ${memoriaNecesaria[$r]} ]; then
-        err "El fichero Input.txt está incompleto, se cargaran los datos por defecto"
-        cat default.txt >Input.txt
+        imprimeError "!!!!!!!El fichero Input.txt está incompleto, se cargaran los datos por defecto"
         read -p "Pulse enter para reiniciar"
         exec $0
       fi
@@ -672,16 +677,6 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
       echo "Cambio de contexto" >>$outputColores
 
       onEventoDestacable=1
-    elif [ "${estados[$procesoAnterior]}" == "EJECUTADO y FINALIZANDO" ] && [ $procesoAnterior -ge 0 ]; then
-      estados[$procesoAnterior]="FINALIZADO"
-
-      if [ $auto != "c" ]; then
-        echo "Cambio de contexto"
-      fi
-      echo "Cambio de contexto" >>$output
-      echo "Cambio de contexto" >>$outputColores
-
-      onEventoDestacable=1
     fi
   else
     let minimo--
@@ -699,7 +694,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   #El proceso actual acaba en este tiempo
   if [[ ${tiemposDeCpu[$procesoActual]} -eq 0 ]]; then
 
-    estados[$procesoActual]="EJECUTADO y FINALIZANDO"
+    estados[$procesoActual]="FINALIZANDO"
     procesoAnterior=$procesoActual
 
     #Tiempo de retorno del proceso: momento actual - momento de llegada
@@ -720,10 +715,10 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     recolectaBasura
   fi
 
-  #onEventoDestacable=1
+  onEventoDestacable=1
   if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
 
-    if [ $auto != "c" ] && [ $onEventoDestacable -eq 1 ]; then
+    if [ $onEventoDestacable -eq 1 ]; then
 
       if [ $auto != "c" ]; then
         echo -e "${green}Instante actual $reloj ${NC}"
