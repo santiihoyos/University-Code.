@@ -711,8 +711,6 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
         break
       fi
     done
-
-    recolectaBasura
   fi
 
   onEventoDestacable=1
@@ -742,6 +740,8 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
     onEventoDestacable=0
   fi
+
+  recolectaBasura
 
 done
 
