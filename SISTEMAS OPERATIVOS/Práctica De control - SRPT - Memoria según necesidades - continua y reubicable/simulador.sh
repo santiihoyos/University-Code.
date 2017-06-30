@@ -543,12 +543,23 @@ function inprimeCabecera() {
   echo "..........................................................................................................................................." >>$output
 }
 
-#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a lso proceos
-#que ya han llegado y que no hayan acabado y no este en cpu
+#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a los proceos
+#que ya han llegado y que no hayan acabado y no este en cpu $1=ProcesoActual
 function aumentaTiempoAcumuladoProcesos() {
   for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
     if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -le $reloj ] && [ $1 -ne $y ]; then
       proc_waitA[$y]=$(expr ${proc_waitA[$y]} + 1)
+    fi
+  done
+}
+
+#Función aumentaTiempoAcumuladoProceso; aumenta el tiempo de espera a los proceos
+#que ya han llegado y que no hayan acabado  $1=ProcesoActual
+function aumentaTiempoRetornoProcesos() {
+  for ((y = 0; y < ${#nombresProcesos[@]}; y++)); do
+    if [ "${tiemposDeCpu[$y]}" -ne 0 ] && [ ${tiemposDeLlegada[$y]} -le $reloj ]; then
+      #Tiempo de retorno del proceso: momento actual - momento de llegada
+      proc_ret[$procesoActual]=$(expr $reloj + 1 - ${tiemposDeLlegada[$procesoActual]})
     fi
   done
 }
@@ -616,7 +627,7 @@ declare proc_waitA[${#nombresProcesos[@]}] #Tiempo de espera acumulado
 declare proc_ret[${#nombresProcesos[@]}]   #Tiempo de retorno
 finDeLaPlanificacion=0
 procesoActual=0
-procesoAnterior=0
+procesoAnterior=-1
 onEventoDestacable=1
 minimo=99999999
 clear
@@ -691,14 +702,13 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
 
   tiemposDeCpu[$procesoActual]= let tiemposDeCpu[$procesoActual]--
 
+  aumentaTiempoRetornoProcesos $procesoActual
+
   #El proceso actual acaba en este tiempo
   if [[ ${tiemposDeCpu[$procesoActual]} -eq 0 ]]; then
 
     estados[$procesoActual]="FINALIZANDO"
     procesoAnterior=$procesoActual
-
-    #Tiempo de retorno del proceso: momento actual - momento de llegada
-    proc_ret[$procesoActual]=$(expr $reloj + 1 - ${tiemposDeLlegada[$procesoActual]})
 
     #Como el minimo es 0 en este momento tenemos que buscar un minimo comparable
     #para ello cogemos el primer proceso con necesidad > 0 y que este ya en memoria
@@ -713,7 +723,7 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     done
   fi
 
-  onEventoDestacable=1
+  #onEventoDestacable=1
   if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
 
     if [ $onEventoDestacable -eq 1 ]; then
