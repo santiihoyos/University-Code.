@@ -678,7 +678,10 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
   #si ha habido un cambio de contexto lo logueamos
   if [[ $procesoActual -ne $procesoAnterior ]]; then
 
-    if [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ $procesoAnterior -ge 0 ] && [ ${tiemposDeLlegada[$procesoAnterior]} -le $reloj ]; then
+    if [ $procesoAnterior -ge 0 ] && [ ${tiemposDeCpu[$procesoAnterior]} -gt 0 ] && [ ${tiemposDeLlegada[$procesoAnterior]} -le $reloj ] \
+    && [ "${estados[$procesoAnterior]}" != "SIN MEMO." ] && [ "${estados[$procesoAnterior]}" != "EN MEMORIA"  ]; then
+
+
       estados[$procesoAnterior]="EN PAUSA"
 
       if [ $auto != "c" ]; then
@@ -723,13 +726,13 @@ while [[ $finDeLaPlanificacion -eq 0 ]]; do
     done
   fi
 
-  #onEventoDestacable=1
+  onEventoDestacable=1
   if [ $onEventoDestacable -eq 1 ] || [ $finDeLaPlanificacion -eq 1 ]; then
 
     if [ $onEventoDestacable -eq 1 ]; then
 
       if [ $auto != "c" ]; then
-        echo -e "${green}Instante actual $reloj ${NC}"
+        echo -e "${green}Instante actual $(expr $reloj + 1) ${NC}"
       fi
       echo "Instante actual $reloj" >>$output
       echo -e "${green}Instante actual $reloj ${NC}" >>$outputColores
